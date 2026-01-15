@@ -1046,7 +1046,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state>###Unitialized###</state>
+                    <state>tota_app_cm7_import_lib.o</state>
                 </option>
                 <option>
                     <name>OILinkExtraOption</name>
@@ -5973,7 +5973,7 @@
                     <name>CCDefines</name>
                     <state>DEBUG</state>
                     <state>XIP_EXTERNAL_FLASH=1</state>
-                    <state>XIP_BOOT_HEADER_ENABLE=1</state>
+                    <state>XIP_BOOT_HEADER_ENABLE=0</state>
                     <state>SDK_DEBUGCONSOLE=1</state>
                     <state>MCUX_META_BUILD</state>
                     <state>MCUXPRESSO_SDK</state>
@@ -6445,7 +6445,7 @@
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>hello_world_cm7.srec</state>
+                    <state>tota_app_cm7.srec</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>
@@ -6780,7 +6780,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state>###Unitialized###</state>
+                    <state>tota_app_cm7_import_lib.o</state>
                 </option>
                 <option>
                     <name>OILinkExtraOption</name>

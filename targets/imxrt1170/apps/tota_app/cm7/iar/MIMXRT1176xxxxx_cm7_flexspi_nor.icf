@@ -28,10 +28,10 @@
 define symbol __ram_vector_table_size__        =  isdefinedsymbol(__ram_vector_table__) ? 0x00000400 : 0;
 define symbol __ram_vector_table_offset__      =  isdefinedsymbol(__ram_vector_table__) ? 0x000003FF : 0;
 
-define symbol m_interrupts_start       = 0x30002000;
-define symbol m_interrupts_end         = 0x300023FF;
+define symbol m_interrupts_start       = 0x30080000;
+define symbol m_interrupts_end         = 0x300803FF;
 
-define symbol m_text_start             = 0x30002400;
+define symbol m_text_start             = 0x30080400;
 if (isdefinedsymbol(__use_flash64MB__)) {
   define symbol m_text_end               = 0x33FBFFFF;
 } else{
