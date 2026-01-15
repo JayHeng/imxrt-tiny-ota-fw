@@ -65,6 +65,9 @@ static bool is_reliable_update_active(void);
 //! @brief Determine if the specified application is valid
 static bool is_specified_application_valid(uint32_t applicationBase, uint16_t *applicationVersion);
 
+//! @brief Determine if the specified application is valid
+static void update_reliable_update_status(uint32_t status);
+
 //! @brief Get the start address of specified application
 static uint32_t get_application_base(specified_application_type_t applicationType);
 
@@ -81,9 +84,11 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
 // See bl_reliable_update.h for documents on this function.
 void bootloader_reliable_update_as_requested(reliable_update_option_t option, uint32_t address)
 {
+    update_reliable_update_status(kStatus_ReliableUpdateSuccess);
     if (is_reliable_update_active())
     {
-        software_reliable_update(get_application_base(kSpecifiedApplicationType_Slot1));
+        status_t status = software_reliable_update(get_application_base(kSpecifiedApplicationType_Slot1));
+        update_reliable_update_status(status);
     }
 }
 
@@ -125,6 +130,13 @@ static uint32_t get_application_base(specified_application_type_t applicationTyp
     return appMapBase;
 }
 
+// Update the status for reliable update
+static void update_reliable_update_status(uint32_t status)
+{
+    property_store_t *propertyStore = g_bootloaderContext.propertyInterface->store;
+    propertyStore->reliableUpdateStatus = status;
+}
+
 // Determine if the reliable update feature is active
 static bool is_reliable_update_active(void)
 {
@@ -148,6 +160,7 @@ static bool is_reliable_update_active(void)
     }
     else
     {
+        update_reliable_update_status(kStatus_ReliableUpdateInacive);
         return false;
     }
 }
@@ -244,7 +257,6 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
 //      1. Erase the application region
 //      2. Copy the back applcation to the applicaion region
 //      3. Do integrity check for the copied application
-//      4. Erase the backup application
 status_t software_reliable_update(uint32_t applicationBase)
 {
     bool updateResult = true;
