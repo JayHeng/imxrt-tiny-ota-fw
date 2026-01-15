@@ -19,7 +19,6 @@
 #define BL_FEATURE_ISP_BOOT (1)
 
 #define BL_FEATURE_RELIABLE_UPDATE      (1)
-#define BL_FEATURE_HARDWARE_SWAP_UPDATE (0)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Peripheral Configurations

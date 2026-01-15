@@ -41,8 +41,6 @@
 // Declarations
 ////////////////////////////////////////////////////////////////////////////////
 
-#define BL_IS_HARDWARE_SWAP_ENABLED (BL_FEATURE_HARDWARE_SWAP_UPDATE && FSL_FEATURE_FLASH_HAS_PFLASH_BLOCK_SWAP)
-
 typedef enum _reliable_update_option
 {
     kReliableUpdateOption_Normal = 0x0U, //!< Normal option, Update main appliction only if it is invalid
@@ -66,12 +64,8 @@ enum _reliable_update_status
         MAKE_STATUS(kStatusGroup_ReliableUpdate, 3), //!< Backup Application is invalid
     kStatus_ReliableUpdateStillInMainApplication =
         MAKE_STATUS(kStatusGroup_ReliableUpdate, 4), //!< Next boot will be still in Main Application
-    kStatus_ReliableUpdateSwapSystemNotReady =
-        MAKE_STATUS(kStatusGroup_ReliableUpdate, 5), //!< Cannot swap flash by default because swap system is not ready
-    kStatus_ReliableUpdateBackupBootloaderNotReady =
-        MAKE_STATUS(kStatusGroup_ReliableUpdate, 6), //!< Cannot swap flash because there is no valid backup bootloader
-    kStatus_ReliableUpdateSwapIndicatorAddressInvalid =
-        MAKE_STATUS(kStatusGroup_ReliableUpdate, 7), //!< Cannot swap flash because provided swap indicator is invalid
+
+    kStatus_ReliableUpdateSwapTest = MAKE_STATUS(kStatusGroup_ReliableUpdate, 5), //!< Reliable Update succeeded.
 };
 
 ////////////////////////////////////////////////////////////////////////////////

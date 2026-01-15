@@ -77,22 +77,8 @@ static uint32_t get_bootloader_config_area_base(uint32_t applicationBase);
 //! @brief Get the maxmimum backup application size.
 static uint32_t get_max_backup_app_size(uint32_t address);
 
-#if BL_IS_HARDWARE_SWAP_ENABLED
-
-#if BL_TARGET_FLASH
-//! @brief Determine if the backup bootloader is valid
-static bool is_backup_bootloader_valid(void);
-#endif
-
-//! @brief Do hardware reliable application update if backup application is valid
-static status_t hardware_reliable_update(uint32_t swapIndicatorAddress);
-
-//! @brief Get the swap indicator address from IFR if swap system is in ready state.
-static status_t get_swap_indicator_address_if_system_is_in_ready(uint32_t *address);
-#else
 //! @brief Do software reliable application update if backup application is valid
 static status_t software_reliable_update(uint32_t backupApplicationBase);
-#endif // BL_IS_HARDWARE_SWAP_ENABLED
 
 //! @brief Copy source appliction to destination application region and return result
 static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uint32_t len);
@@ -107,32 +93,7 @@ void bootloader_reliable_update_as_requested(reliable_update_option_t option, ui
     // For software implementation, the option doesn't take effect, It always be kReliableUpdateOption_Swap.
     // For hardware implementation, the option works properly
     uint32_t backupApplicationBase;
-#if BL_IS_HARDWARE_SWAP_ENABLED
-    uint32_t swapIndicatorAddress = address;
-    if (option == kReliableUpdateOption_Normal)
-    {
-        uint32_t mainApplicationBase = get_application_base(kSpecifiedApplicationType_Main);
-        if (is_specified_application_valid(mainApplicationBase))
-        {
-            update_reliable_update_status(kStatus_ReliableUpdateStillInMainApplication);
-            return;
-        }
-        else
-        {
-            // Checking the flash swap status to see if it is in Ready state
-            //  if true, get the swap indicator address from IFR by ReadResource API
-            status_t result = get_swap_indicator_address_if_system_is_in_ready(&swapIndicatorAddress);
-            if (result != kStatus_FLASH_Success)
-            {
-                update_reliable_update_status(kStatus_ReliableUpdateSwapSystemNotReady);
-                return;
-            }
-        }
-    }
-    backupApplicationBase = get_application_base(kSpecifiedApplicationType_Backup);
-#else
     backupApplicationBase = (address == 0) ? get_application_base(kSpecifiedApplicationType_Backup) : address;
-#endif // BL_IS_HARDWARE_SWAP_ENABLED
 
     // Below implementaion is for both kReliableUpdateOption_Normal and kReliableUpdateOption_Swap
     if (!is_reliable_update_active(backupApplicationBase))
@@ -143,11 +104,7 @@ void bootloader_reliable_update_as_requested(reliable_update_option_t option, ui
     {
         if (is_specified_application_valid(backupApplicationBase))
         {
-#if BL_IS_HARDWARE_SWAP_ENABLED
-            status_t status = hardware_reliable_update(swapIndicatorAddress);
-#else
             status_t status = software_reliable_update(backupApplicationBase);
-#endif // BL_IS_HARDWARE_SWAP_ENABLED
             update_reliable_update_status(status);
         }
         else
@@ -163,10 +120,6 @@ static uint32_t get_max_backup_app_size(uint32_t address)
 #if BL_TARGET_ROM
     return (g_bootloaderContext.flashState.PFlashTotalSize >> 1);
 #elif BL_TARGET_FLASH
-#if BL_IS_HARDWARE_SWAP_ENABLED
-    return (g_bootloaderContext.flashState.PFlashBlockBase + (g_bootloaderContext.flashState.PFlashTotalSize >> 1) -
-            BL_APP_VECTOR_TABLE_ADDRESS);
-#else
     int32_t maxAppSize;
     int32_t maxBackupAppSize;
 
@@ -180,7 +133,6 @@ static uint32_t get_max_backup_app_size(uint32_t address)
     assert((maxAppSize > 0) && (maxBackupAppSize > 0));
 
     return (uint32_t)MIN(maxAppSize, maxBackupAppSize);
-#endif
 #else
 #error "This Bootloader type is NOT supported!"
 #endif
@@ -204,12 +156,7 @@ static uint32_t get_application_base(specified_application_type_t applicationTyp
 #if BL_TARGET_ROM
         return g_bootloaderContext.flashState.PFlashBlockBase + (g_bootloaderContext.flashState.PFlashTotalSize >> 1);
 #elif BL_TARGET_FLASH
-#if BL_IS_HARDWARE_SWAP_ENABLED
-        return g_bootloaderContext.flashState.PFlashBlockBase + (g_bootloaderContext.flashState.PFlashTotalSize >> 1) +
-               BL_APP_VECTOR_TABLE_ADDRESS;
-#else
         return BL_BACKUP_APP_START;
-#endif // #if BL_IS_HARDWARE_SWAP_ENABLED
 #else
 #error "This Bootloader type is NOT supported!"
 #endif
@@ -343,105 +290,6 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
     return updateResult;
 }
 
-#if BL_IS_HARDWARE_SWAP_ENABLED
-
-#if BL_TARGET_FLASH
-//! @brief Determine if the backup bootloader is valid
-static bool is_backup_bootloader_valid(void)
-{
-    uint32_t mainBootloaderCrc32;
-    uint32_t backupBootloaderCrc32;
-    uint32_t bootloaderSizeInByte =
-        get_application_base(kSpecifiedApplicationType_Main) - g_bootloaderContext.flashState.PFlashBlockBase;
-    uint32_t mainBootloaderBase = g_bootloaderContext.flashState.PFlashBlockBase;
-    uint32_t backupBootloaderBase =
-        g_bootloaderContext.flashState.PFlashBlockBase + (g_bootloaderContext.flashState.PFlashTotalSize >> 1);
-
-    crc32_data_t crcInfo;
-    crc32_init(&crcInfo);
-    // Calculate crc for main bootloader
-    crc32_update(&crcInfo, (uint8_t *)mainBootloaderBase, bootloaderSizeInByte);
-    crc32_finalize(&crcInfo, &mainBootloaderCrc32);
-    crc32_init(&crcInfo);
-    // Calculate crc for backup bootloader
-    crc32_update(&crcInfo, (uint8_t *)backupBootloaderBase, bootloaderSizeInByte);
-    crc32_finalize(&crcInfo, &backupBootloaderCrc32);
-
-    return (mainBootloaderCrc32 == backupBootloaderCrc32);
-}
-#endif
-
-//! @brief Get the swap indicator address from IFR if swap system is in ready state.
-static status_t get_swap_indicator_address_if_system_is_in_ready(uint32_t *address)
-{
-    flash_swap_state_config_t returnSwapInfo;
-    status_t result =
-        FLASH_SwapControl(&g_bootloaderContext.flashState, 0x10, kFLASH_SwapControlOptionReportStatus, &returnSwapInfo);
-    *address = 0;
-    if ((result == kStatus_FLASH_Success) && (returnSwapInfo.flashSwapState == kFLASH_SwapStateReady))
-    {
-        flash_swap_ifr_field_config_t flashSwapIfrField;
-        result = FLASH_ReadResource(&g_bootloaderContext.flashState, kFLASH_ResourceRangePflashSwapIfrStart,
-                                    (uint32_t *)&flashSwapIfrField, sizeof(flash_swap_ifr_field_config_t),
-                                    kFLASH_ResourceOptionFlashIfr);
-        if (result == kStatus_FLASH_Success)
-        {
-            *address = (uint32_t)flashSwapIfrField.swapIndicatorAddress *
-                       FSL_FEATURE_FLASH_PFLASH_SWAP_CONTROL_CMD_ADDRESS_ALIGMENT;
-
-            return kStatus_FLASH_Success;
-        }
-    }
-    // Set the result as kStatus_FLASH_CommandFailure temporary to inform upper layer
-    return kStatus_FLASH_CommandFailure;
-}
-
-// Execute hardware reliable update
-// There are 3 steps needed to complete the reliable update process:
-//      1. Check if backup bootloader is valid, if true, copy main bootloader to backup bootloader region
-//      2. Check if provided address is in valid swap indicator address range
-//      3. Swap flash system
-status_t hardware_reliable_update(uint32_t swapIndicatorAddress)
-{
-    bool updateResult = true;
-    status_t status;
-
-#if BL_TARGET_FLASH
-    // Check if backup bootloader is valid
-    if (!is_backup_bootloader_valid())
-    {
-        uint32_t mainBootloaderBase = g_bootloaderContext.flashState.PFlashBlockBase;
-        uint32_t backupBootloaderBase =
-            g_bootloaderContext.flashState.PFlashBlockBase + (g_bootloaderContext.flashState.PFlashTotalSize >> 1);
-        uint32_t bootloaderSizeInByte =
-            get_application_base(kSpecifiedApplicationType_Main) - g_bootloaderContext.flashState.PFlashBlockBase;
-
-        // Copy the Main Bootloader to Backup Bootloader region
-        updateResult =
-            get_result_after_copying_application(mainBootloaderBase, backupBootloaderBase, bootloaderSizeInByte);
-
-        if (!updateResult)
-        {
-            update_reliable_update_status(kStatus_ReliableUpdateBackupBootloaderNotReady);
-            return kStatus_ReliableUpdateBackupBootloaderNotReady;
-        }
-    }
-#endif
-    // Swap flash system
-    status = FLASH_Swap(&g_bootloaderContext.flashState, swapIndicatorAddress, kFLASH_SwapFunctionOptionEnable);
-    if (kStatus_FLASH_SwapIndicatorAddressError == status)
-    {
-        update_reliable_update_status(kStatus_ReliableUpdateSwapIndicatorAddressInvalid);
-        return kStatus_ReliableUpdateSwapIndicatorAddressInvalid;
-    }
-    else if (kStatus_FLASH_Success != status)
-    {
-        updateResult = false;
-    }
-
-    return (updateResult) ? kStatus_ReliableUpdateSuccess : kStatus_ReliableUpdateFail;
-}
-#else
 // Execute software reliable update
 // There are 4 steps needed to complete the reliable update process:
 //      1. Erase the application region
@@ -490,6 +338,5 @@ status_t software_reliable_update(uint32_t backupApplicationBase)
 
     return (updateResult) ? kStatus_ReliableUpdateSuccess : kStatus_ReliableUpdateFail;
 }
-#endif // BL_IS_HARDWARE_SWAP_ENABLED
 
 #endif // BL_FEATURE_RELIABLE_UPDATE
