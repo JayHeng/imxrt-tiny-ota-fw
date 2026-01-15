@@ -639,6 +639,8 @@ static void bootloader_run(void)
 }
 
 //! @brief Entry point for the bootloader.
+extern void * __vector_RAM_table [];
+#pragma required=__vector_RAM_table
 int main(void)
 {
     bootloader_init();

@@ -73,7 +73,7 @@ initialize by copy { readonly }
         section .boot_hdr.dcd_data};
 do not initialize  { section .noinit };
 
-define block CodeRelocate { section .textrw_init };
+//define block CodeRelocate { section .textrw_init };
 define block CodeRelocateRam { section .textrw };
 //define block ApplicationFlash { readonly, block CodeRelocate, readonly section .noinit };
 define block ApplicationRam { readwrite, block CodeRelocateRam, block CSTACK, block HEAP};
@@ -85,7 +85,7 @@ place at address mem: m_boot_hdr_dcd_data_start { readonly section .boot_hdr.dcd
 keep{ section .boot_hdr.conf, section .boot_hdr.ivt, section .boot_hdr.boot_data, section .boot_hdr.dcd_data };
 
 //place in TEXT_region { block ApplicationFlash };
-place at address mem:m_ram_vector_table_start { section .intvec_RAM };
+place at address mem:m_interrupts_ram_start { section .intvec_RAM };
 place at address mem:m_text_start             { readonly section .intvec };
-place in TEXT_region                          { readonly, block CORE1_IMAGE_BLOCK };
+place in TEXT_region                          { readonly };
 place in DATA_region { block ApplicationRam };

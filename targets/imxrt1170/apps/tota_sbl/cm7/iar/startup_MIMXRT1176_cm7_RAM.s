@@ -21,34 +21,31 @@
 ;
 ; The vector table is normally located at address 0.
 ; When debugging in RAM, it can be located in RAM, aligned to at least 2^6.
-; The name "__vector_table" has special meaning for C-SPY:
+; The name "__vector_RAM_table" has special meaning for C-SPY:
 ; it is where the SP start value is found, and the NVIC vector
 ; table register (VTOR) is initialized to this address if != 0.
 ;
 ; Cortex-M version
 ;
 
-        MODULE  ?cstartup
+        MODULE  ?cstartup_RAM
 
         ;; Forward declaration of sections.
         SECTION CSTACK:DATA:NOROOT(3)
 
-        SECTION .intvec:CODE:NOROOT(2)
+        SECTION .intvec_RAM:CODE:NOROOT(2)
 
         EXTERN  __iar_program_start
         EXTERN  SystemInit
-        PUBLIC  __vector_table
-        PUBLIC  __vector_table_0x1c
-        PUBLIC  __Vectors
-        PUBLIC  __Vectors_End
-        PUBLIC  __Vectors_Size
+        PUBLIC  __vector_RAM_table
+        PUBLIC  __vector_RAM_table_0x1c
+        PUBLIC  __Vectors_RAM
+        PUBLIC  __Vectors_RAM_End
+        PUBLIC  __Vectors_RAM_Size
 
         DATA
 
-__iar_init$$done:              ; The vector table is not needed
-                      ; until after copy initialization is done
-
-__vector_table
+__vector_RAM_table
         DCD     sfe(CSTACK)
         DCD     Reset_Handler
 
@@ -57,7 +54,7 @@ __vector_table
         DCD     MemManage_Handler                             ;MPU Fault Handler
         DCD     BusFault_Handler                              ;Bus Fault Handler
         DCD     UsageFault_Handler                            ;Usage Fault Handler
-__vector_table_0x1c
+__vector_RAM_table_0x1c
         DCD     0                                             ;Reserved
         DCD     0                                             ;Reserved
         DCD     0                                             ;Reserved
@@ -309,10 +306,10 @@ __vector_table_0x1c
         DCD     DefaultISR                                    ;253
         DCD     DefaultISR                                    ;254
         DCD     0xFFFFFFFF                                    ; Reserved for user TRIM value
-__Vectors_End
+__Vectors_RAM_End
 
-__Vectors       EQU   __vector_table
-__Vectors_Size  EQU   __Vectors_End - __Vectors
+__Vectors_RAM   EQU   __vector_RAM_table
+__Vectors_RAM_Size  EQU   __Vectors_RAM_End - __Vectors_RAM
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -326,7 +323,7 @@ __Vectors_Size  EQU   __Vectors_End - __Vectors
 Reset_Handler
         CPSID   I               ; Mask interrupts
         LDR     R0, =0xE000ED08
-        LDR     R1, =__vector_table
+        LDR     R1, =__vector_RAM_table
         STR     R1, [R0]
         LDR     R2, [R1]
         MSR     MSP, R2

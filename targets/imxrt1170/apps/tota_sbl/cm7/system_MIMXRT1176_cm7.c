@@ -53,6 +53,11 @@ void SystemInit(void)
 #endif                                                 /* ((__FPU_PRESENT == 1) && (__FPU_USED == 1)) */
 
     init_interrupts();
+
+#if defined(__ICCARM__)
+  #pragma section = ".intvec_RAM"
+  SCB->VTOR = (uint32_t)__section_begin(".intvec_RAM");
+#endif
 }
 
 /* ----------------------------------------------------------------------------
