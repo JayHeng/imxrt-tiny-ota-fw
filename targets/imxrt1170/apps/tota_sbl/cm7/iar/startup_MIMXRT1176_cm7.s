@@ -45,9 +45,6 @@
 
         DATA
 
-__iar_init$$done:              ; The vector table is not needed
-                      ; until after copy initialization is done
-
 __vector_table
         DCD     sfe(CSTACK)
         DCD     Reset_Handler
