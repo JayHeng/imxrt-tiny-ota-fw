@@ -22,8 +22,8 @@ __attribute__((section(".boot_hdr.conf"), used))
 #pragma location = ".boot_hdr.conf"
 #endif
 
-#define FLASH_DUMMY_CYCLES 0x08
-#define FLASH_DUMMY_VALUE  0x03
+#define FLASH_DUMMY_CYCLES 0x06 // 0x08
+//#define FLASH_DUMMY_VALUE  0x03
 
 const flexspi_nor_config_t qspiflash_config = {
     .memConfig =
@@ -37,20 +37,20 @@ const flexspi_nor_config_t qspiflash_config = {
             .controllerMiscOption = 0x10,
             .deviceType           = kFlexSpiDeviceType_SerialNOR,
             .sflashPadType        = kSerialFlash_4Pads,
-            .serialClkFreq        = kFlexSpiSerialClk_133MHz,
+            .serialClkFreq        = kFlexSpiSerialClk_100MHz,
             .sflashA1Size         = 64u * 1024u * 1024u,
             /* Enable flash configuration feature */
             .configCmdEnable   = 1u,
             .configModeType[0] = kDeviceConfigCmdType_Generic,
             /* Set configuration command sequences */
-            .configCmdSeqs[0] =
-                {
-                    .seqNum   = 1,
-                    .seqId    = 12,
-                    .reserved = 0,
-                },
+            //.configCmdSeqs[0] =
+            //    {
+            //        .seqNum   = 1,
+            //        .seqId    = 12,
+            //        .reserved = 0,
+            //    },
             /* Prepare setting value for Read Register in flash */
-            .configCmdArgs[0] = (FLASH_DUMMY_VALUE << 4),
+            //.configCmdArgs[0] = (FLASH_DUMMY_VALUE << 4),
             .lookupTable =
                 {
                     // Read LUTs
