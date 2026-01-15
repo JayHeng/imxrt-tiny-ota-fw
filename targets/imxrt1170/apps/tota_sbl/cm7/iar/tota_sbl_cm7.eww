@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workspace>
+    <project>
+        <path>$WS_DIR$\tota_sbl_cm7.ewp</path>
+    </project>
+    <batchBuild>
+        <batchDefinition>
+            <name>all</name>
+            <member>
+                <project>flashloader_cm7</project>
+                <configuration>release</configuration>
+            </member>
+        </batchDefinition>
+        <batchDefinition>
+            <name>release</name>
+            <member>
+                <project>flashloader_cm7</project>
+                <configuration>release</configuration>
+            </member>
+        </batchDefinition>
+    </batchBuild>
+</workspace>
