@@ -860,7 +860,7 @@
                 </option>
                 <option>
                     <name>IlinkConfigDefines</name>
-                    <state></state>
+                    <state>__ram_vector_table__=1</state>
                 </option>
                 <option>
                     <name>IlinkMapFile</name>
@@ -1234,6 +1234,15 @@
         </file>
         <file>
             <name>$PROJ_DIR$\..\clock_config.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\startup_MIMXRT1176_cm7.s</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\startup_MIMXRT1176_cm7_RAM.s</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\system_MIMXRT1176_cm7.c</name>
         </file>
     </group>
     <group>
@@ -1729,24 +1738,6 @@
         <name>mcu_bootloader</name>
         <group>
             <name>targets</name>
-            <group>
-                <name>MIMXRT1176</name>
-                <group>
-                    <name>src</name>
-                    <group>
-                        <name>startup</name>
-                        <group>
-                            <name>iar</name>
-                            <file>
-                                <name>$PROJ_DIR$\..\..\..\..\..\..\middleware\mcu_bootloader\targets\MIMXRT1176\src\startup\iar\startup_MIMXRT1176_cm7.s</name>
-                            </file>
-                        </group>
-                        <file>
-                            <name>$PROJ_DIR$\..\..\..\..\..\..\middleware\mcu_bootloader\targets\MIMXRT1176\src\startup\system_MIMXRT1176_cm7.c</name>
-                        </file>
-                    </group>
-                </group>
-            </group>
         </group>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\..\devices\RT\RT1170\MIMXRT1176\system_MIMXRT1176_cm7.h</name>

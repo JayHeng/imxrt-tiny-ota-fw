@@ -13,6 +13,9 @@
 ** ###################################################################
 */
 
+define symbol __ram_vector_table_size__        =  isdefinedsymbol(__ram_vector_table__) ? 0x00000400 : 0;
+define symbol __ram_vector_table_offset__      =  isdefinedsymbol(__ram_vector_table__) ? 0x000003FF : 0;
+
 define symbol m_interrupts_start       = 0x30002000;
 define symbol m_interrupts_end         = 0x300023FF;
 
@@ -23,8 +26,11 @@ if (isdefinedsymbol(__use_flash64MB__)) {
   define symbol m_text_end               = 0x30FBFFFF;
 }
 
-define symbol m_data_start             = 0x20250000;
-define symbol m_data_end               = 0x2027FFFF;
+define symbol m_interrupts_ram_start   = 0x20000000;
+define symbol m_interrupts_ram_end     = 0x20000000 + __ram_vector_table_offset__;
+
+define symbol m_data_start             = m_interrupts_ram_start + __ram_vector_table_size__;
+define symbol m_data_end               = 0x2003FFFF;
 
 define exported symbol m_boot_hdr_conf_start = 0x30000400;
 define symbol m_boot_hdr_ivt_start           = 0x30001000;
@@ -45,8 +51,8 @@ if (isdefinedsymbol(__heap_size__)) {
 }
 
 define exported symbol __VECTOR_TABLE  = m_interrupts_start;
-define exported symbol __VECTOR_RAM    = m_interrupts_start;
-define exported symbol __RAM_VECTOR_TABLE_SIZE = 0x0;
+define exported symbol __VECTOR_RAM            = isdefinedsymbol(__ram_vector_table__) ? m_interrupts_ram_start : m_interrupts_start;
+define exported symbol __RAM_VECTOR_TABLE_SIZE = __ram_vector_table_size__;
 
 define memory mem with size = 4G;
 define region TEXT_region = mem:[from m_interrupts_start to m_interrupts_end]
@@ -59,13 +65,18 @@ define block HEAP      with alignment = 8, size = __size_heap__     { };
 initialize by copy { readwrite };
 initialize by copy { section .data};
 initialize by copy { section .textrw };
+initialize by copy { readonly } 
+    except { 
+        section .boot_hdr.conf,
+        section .boot_hdr.ivt,
+        section .boot_hdr.boot_data,
+        section .boot_hdr.dcd_data};
 do not initialize  { section .noinit };
 
 define block CodeRelocate { section .textrw_init };
 define block CodeRelocateRam { section .textrw };
-define block ApplicationFlash { readonly, block CodeRelocate, readonly section .noinit };
+//define block ApplicationFlash { readonly, block CodeRelocate, readonly section .noinit };
 define block ApplicationRam { readwrite, block CodeRelocateRam, block CSTACK, block HEAP};
-place at address mem: m_interrupts_start    { readonly section .intvec };
 place at address mem: m_boot_hdr_conf_start { section .boot_hdr.conf };
 place at address mem: m_boot_hdr_ivt_start { section .boot_hdr.ivt };
 place at address mem: m_boot_hdr_boot_data_start { readonly section .boot_hdr.boot_data };
@@ -73,5 +84,8 @@ place at address mem: m_boot_hdr_dcd_data_start { readonly section .boot_hdr.dcd
 
 keep{ section .boot_hdr.conf, section .boot_hdr.ivt, section .boot_hdr.boot_data, section .boot_hdr.dcd_data };
 
-place in TEXT_region { block ApplicationFlash };
+//place in TEXT_region { block ApplicationFlash };
+place at address mem:m_ram_vector_table_start { section .intvec_RAM };
+place at address mem:m_text_start             { readonly section .intvec };
+place in TEXT_region                          { readonly, block CORE1_IMAGE_BLOCK };
 place in DATA_region { block ApplicationRam };
