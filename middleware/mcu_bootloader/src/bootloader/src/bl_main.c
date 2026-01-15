@@ -13,23 +13,10 @@
 #include "bootloader.h"
 #include "bootloader_common.h"
 #include "fsl_assert.h"
-#if !BL_FEATURE_HAS_NO_INTERNAL_FLASH
-#if !BL_DEVICE_IS_LPC_SERIES
-#include "fsl_flash.h"
-#else
-#include "fsl_iap.h"
-#endif
-#endif // #if !BL_FEATURE_HAS_NO_INTERNAL_FLASH
 #include "fsl_rtos_abstraction.h"
 #include "microseconds.h"
 #include "property.h"
 #include "vector_table_info.h"
-#if BL_FEATURE_CRC_CHECK
-#include "bl_app_crc_check.h"
-#endif
-#if BL_FEATURE_QSPI_MODULE
-#include "qspi.h"
-#endif
 #include "memory.h"
 
 #if BL_FEATURE_RELIABLE_UPDATE
@@ -55,12 +42,6 @@ static bool is_direct_boot(void);
 static peripheral_descriptor_t const *get_active_peripheral(void);
 static void bootloader_init(void);
 static void bootloader_run(void);
-#if !BL_FEATURE_HAS_NO_INTERNAL_FLASH
-static void bootloader_flash_init(void);
-#endif // #if !BL_FEATURE_HAS_NO_INTERNAL_FLASH
-#if BL_FEATURE_QSPI_MODULE
-static void configure_quadspi_as_needed(void);
-#endif
 
 int main(void);
 
@@ -117,23 +98,6 @@ static void get_user_application_entry(uint32_t *appEntry, uint32_t *appStack)
     *appEntry = 0;
     *appStack = 0;
 #else
-#if FSL_FEATURE_FLASH_HAS_ACCESS_CONTROL
-    // Check if address of SP and PC is in an execute-only region.
-    if (!is_in_execute_only_region(kDefaultVectorTableAddress, 8))
-    {
-        *appEntry = APP_VECTOR_TABLE[kInitialPC];
-        *appStack = APP_VECTOR_TABLE[kInitialSP];
-    }
-    else
-    {
-        // Set to invalid value when vector table is in execute-only region,
-        // as ROM doesn't support jumping to an application in such region so far.
-        // The main purpose of below operation is to prevent ROM from inifinit loop
-        // between NVIC_SystemReset() and fetching SP and PC frome execute-only region.
-        *appEntry = 0;
-        *appStack = 0;
-    }
-#else
 #if BL_FEATURE_RELIABLE_UPDATE
     if (g_bootloaderContext.imageStart != 0xffffffffu)
     {
@@ -150,29 +114,14 @@ static void get_user_application_entry(uint32_t *appEntry, uint32_t *appStack)
     *appEntry = APP_VECTOR_TABLE[kInitialPC];
     *appStack = APP_VECTOR_TABLE[kInitialSP];
 #endif // BL_FEATURE_RELIABLE_UPDATE
-#endif //  FSL_FEATURE_FLASH_HAS_ACCESS_CONTROL
 #endif // BL_TARGET_RAM
 }
 #endif // BL_FEATURE_TIMEOUT
 
 #if !BL_FEATURE_TIMEOUT
-bool is_direct_boot(void)
-{
-    bootloader_configuration_data_t *configurationData =
-        &g_bootloaderContext.propertyInterface->store->configurationData;
-
-    return (~configurationData->bootFlags) & kBootFlag_DirectBoot;
-}
-#endif // !BL_FEATURE_TIMEOUT
-
-#if !BL_FEATURE_TIMEOUT
 //! @brief Exits bootloader and jumps to the user application.
 static void jump_to_application(uint32_t applicationAddress, uint32_t stackPointer)
 {
-#if BL_FEATURE_OTFAD_MODULE
-    quadspi_cache_clear();
-    oftfad_resume_as_needed();
-#endif
 
     shutdown_cleanup(kShutdownType_Shutdown);
 
@@ -258,32 +207,6 @@ static bool is_application_ready_for_executing(uint32_t applicationAddress)
 {
     bool result = is_valid_application_location(applicationAddress);
 
-#if BL_FEATURE_OTFAD_MODULE
-    if (result && is_qspi_present())
-    {
-        quadspi_cache_clear();
-        status_t status = otfad_init_as_needed();
-        if (status != kStatus_Success)
-        {
-            result = false;
-        }
-        update_qspi_otfad_init_status(status);
-    }
-#endif
-
-#if BL_FEATURE_CRC_CHECK
-    // Validate application crc only if its location is valid
-    if (result)
-    {
-        result = is_application_crc_check_pass();
-    }
-
-#if BL_FEATURE_OTFAD_MODULE
-    otfad_bypass_as_needed();
-#endif // BL_FEATURE_OTFAD_MODULE
-
-#endif
-
     return result;
 }
 #endif // !BL_FEATURE_TIMEOUT
@@ -325,9 +248,6 @@ static peripheral_descriptor_t const *get_active_peripheral(void)
     }
 
 #if !BL_FEATURE_TIMEOUT
-#if BL_FEATURE_POWERDOWN
-    bool shortTimeout = false;
-#endif
     const uint64_t ticksPerMillisecond = microseconds_convert_to_ticks(1000);
 
     // Get the user application entry point and stack pointer.
@@ -340,11 +260,6 @@ static peripheral_descriptor_t const *get_active_peripheral(void)
     // If the boot to rom option is not set AND there is a valid jump application determine the timeout value
     if (!is_boot_pin_asserted() && is_application_ready_for_executing(applicationAddress))
     {
-        if (is_direct_boot())
-        {
-            jump_to_application(applicationAddress, stackPointer);
-        }
-
         // Calculate how many ticks we need to wait based on the bootloader config. Check to see if
         // there is a valid configuration data value for the timeout. If there's not, use the
         // default timeout value.
@@ -361,17 +276,7 @@ static peripheral_descriptor_t const *get_active_peripheral(void)
 
         // save how many ticks we're currently at before the detection loop starts
         lastTicks = microseconds_get_ticks();
-#if BL_FEATURE_POWERDOWN
-        shortTimeout = true;
-#endif
     }
-#if BL_FEATURE_POWERDOWN
-    else
-    {
-        timeoutTicks = BL_DEFAULT_POWERDOWN_TIMEOUT * ticksPerMillisecond;
-        lastTicks = microseconds_get_ticks();
-    }
-#endif
 #endif // !BL_FEATURE_TIMEOUT
 
     // Wait for a peripheral to become active
@@ -389,28 +294,9 @@ static peripheral_descriptor_t const *get_active_peripheral(void)
             // Check if the elapsed time is longer than the timeout.
             if (elapsedTicks >= timeoutTicks)
             {
-#if BL_FEATURE_POWERDOWN
-                if (shortTimeout)
-                {
-#endif
-                    // In the case of the typical peripheral timeout, jump to the user application.
-                    jump_to_application(applicationAddress, stackPointer);
-#if BL_FEATURE_POWERDOWN
-                }
-                else
-                {
-                    // Make sure a timeout value has been defined before shutting down.
-                    if (BL_DEFAULT_POWERDOWN_TIMEOUT)
-                    {
-                        // Shut down the bootloader and return to reset-type state prior to low
-                        // power entry
-                        shutdown_cleanup(kShutdownType_Shutdown);
+                // In the case of the typical peripheral timeout, jump to the user application.
+                jump_to_application(applicationAddress, stackPointer);
 
-                        // Enter VLLS1 low power mode
-                        enter_vlls1();
-                    }
-                }
-#endif
             }
         }
 #endif // !BL_FEATURE_TIMEOUT
@@ -454,73 +340,6 @@ static peripheral_descriptor_t const *get_active_peripheral(void)
     return activePeripheral;
 }
 
-#if BL_FEATURE_QSPI_MODULE
-static void configure_quadspi_as_needed(void)
-{
-    // Start the lifetime counter
-    microseconds_init();
-    if (qspi_need_configure())
-    {
-        status_t qspiOtfadInitStatus = kStatus_QspiNotConfigured;
-        // Try to configure QuadSPI module based on on qspi_config_block_pointer in BCA first,
-        // If bootloader cannot get qspi config block from internal flash, try to configure QSPI
-        // based on default place (start address of QuadSPI memory).
-        uint32_t qspi_config_block_base =
-            g_bootloaderContext.propertyInterface->store->configurationData.qspi_config_block_pointer;
-
-        // Get the start address and flash size
-        // Note: Basically BCA is always stored in Main flash memory
-        uint32_t flashStart;
-        g_bootloaderContext.flashDriverInterface->flash_get_property(g_bootloaderContext.allFlashState,
-                                                                     kFLASH_PropertyPflash0BlockBaseAddr, &flashStart);
-        uint32_t flashSize;
-        g_bootloaderContext.flashDriverInterface->flash_get_property(g_bootloaderContext.allFlashState,
-                                                                     kFLASH_PropertyPflash0TotalSize, &flashSize);
-
-        // Check if the pointer of qspi config block is valid.
-        if ((qspi_config_block_base != 0xFFFFFFFF) && (qspi_config_block_base > flashStart) &&
-            (qspi_config_block_base <= (flashStart + flashSize - sizeof(qspi_config_t))))
-        {
-#if FSL_FEATURE_FLASH_HAS_ACCESS_CONTROL
-            if (!is_in_execute_only_region(qspi_config_block_base, sizeof(qspi_config_t)))
-            {
-                qspiOtfadInitStatus = quadspi_init((void *)qspi_config_block_base);
-            }
-#else
-            qspiOtfadInitStatus = quadspi_init((void *)qspi_config_block_base);
-#endif // FSL_FEATURE_FLASH_HAS_ACCESS_CONTROL
-        }
-
-        if (qspiOtfadInitStatus == kStatus_QspiNotConfigured)
-        {
-            qspiOtfadInitStatus = quadspi_init(NULL);
-        }
-        update_qspi_otfad_init_status(qspiOtfadInitStatus);
-    }
-    // Shutdown the lifetime counter before configuring clock.
-    lock_acquire();
-    microseconds_shutdown();
-    lock_release();
-}
-#endif
-
-#if !BL_FEATURE_HAS_NO_INTERNAL_FLASH
-static void bootloader_flash_init(void)
-{
-    g_bootloaderContext.flashDriverInterface->flash_init(g_bootloaderContext.allFlashState);
-#if !BL_DEVICE_IS_LPC_SERIES
-    (void)FTFx_CACHE_Init(g_bootloaderContext.allFlashCacheState);
-#endif
-#if BL_FEATURE_SUPPORT_DFLASH
-    check_available_dFlash();
-    if (g_bootloaderContext.dflashDriverInterface != NULL)
-    {
-        (void)g_bootloaderContext.dflashDriverInterface->flash_init(g_bootloaderContext.dFlashState);
-    }
-#endif // BL_FEATURE_SUPPORT_DFLASH
-}
-#endif // #if !BL_FEATURE_HAS_NO_INTERNAL_FLASH
-
 //! @brief Initialize the bootloader and peripherals.
 //!
 //! This function initializes hardware and clocks, loads user configuration data, and initialzes
@@ -538,33 +357,14 @@ static void bootloader_init(void)
     // Init pinmux and other hardware setup.
     init_hardware();
 
-#if !BL_FEATURE_HAS_NO_INTERNAL_FLASH
-    // Init flash driver.
-    bootloader_flash_init();
-#endif // #if !BL_FEATURE_HAS_NO_INTERNAL_FLASH
-
-// Init QSPI module if needed
-#if BL_FEATURE_QSPI_MODULE
-    configure_quadspi_as_needed();
-#endif // BL_FEATURE_QSPI_MODULE
-
     // Configure clocks.
     configure_clocks(kClockOption_EnterBootloader);
 
     // Start the lifetime counter
     microseconds_init();
 
-#if BL_FEATURE_BYPASS_WATCHDOG
-    bootloader_watchdog_init();
-#endif // BL_FEATURE_BYPASS_WATCHDOG
-
     // Init address range of flash array, SRAM_L and SRAM U.
     g_bootloaderContext.memoryInterface->init();
-    
-#if BL_FEATURE_PHANTOM_UPDATE
-    // Update the flash_size, ram_size and available peripherals and falshy_swap based on IFR    
-    phantom_update();     
-#endif // BL_FEATURE_PHANTOM_UPDATE
     
     // Fully init the property store.
     g_bootloaderContext.propertyInterface->init();
