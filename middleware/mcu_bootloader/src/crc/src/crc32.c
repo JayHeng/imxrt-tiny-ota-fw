@@ -159,6 +159,7 @@ void crc32_update(crc32_data_t *crc32Config, const uint8_t *src, uint32_t length
 // finalize the crc32 calculation for non-word-aligned counts
 void crc32_finalize(crc32_data_t *crc32Config, uint32_t *hash)
 {
+    /*
     uint32_t crc = crc32Config->currentCrc;
     uint32_t byteCount = crc32Config->byteCountCrc;
 
@@ -173,6 +174,7 @@ void crc32_finalize(crc32_data_t *crc32Config, uint32_t *hash)
     }
 
     crc32Config->currentCrc = crc;
+    */
 
     *hash = crc32Config->currentCrc;
 }

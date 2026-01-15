@@ -18,7 +18,8 @@
 // Determines whether to support isp boot via peripherals.
 #define BL_FEATURE_ISP_BOOT (1)
 
-#define BL_FEATURE_RELIABLE_UPDATE      (1)
+#define BL_FEATURE_RELIABLE_UPDATE (1)
+#define BL_FEATURE_CRC_CHECK       (1)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Peripheral Configurations
@@ -81,10 +82,6 @@
 #endif
 
 #define BL_FEATURE_MIN_PROFILE (0)
-
-#if !defined(BL_TARGET_RAM)
-#define BL_FEATURE_CRC_CHECK (1)
-#endif
 
 // Bootloader peripheral detection default timeout in milliseconds
 // After coming out of reset the bootloader will spin in a peripheral detection

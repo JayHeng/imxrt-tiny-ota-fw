@@ -34,20 +34,20 @@
 #include "bootloader/bl_app_crc_check.h"
 #include "property/property.h"
 #include "bootloader/bootloader.h"
-#include "flash/fsl_flash.h"
 #include "memory/memory.h"
 #include "crc/crc32.h"
 #include "utilities/fsl_assert.h"
+#include "flexspi_nor_flash.h"
 
 #if BL_FEATURE_RELIABLE_UPDATE
+
+#if (defined(__ICCARM__))
+#pragma section = ".intvec"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
 ////////////////////////////////////////////////////////////////////////////////
-
-#if (BL_BACKUP_APP_START & (FSL_FEATURE_FLASH_PFLASH_BLOCK_SECTOR_SIZE - 1))
-#error "The backup application start address must be sector-aligned!"
-#endif
 
 // image header for Cortex-M series
 typedef struct
@@ -59,26 +59,17 @@ typedef struct
 ////////////////////////////////////////////////////////////////////////////////
 // Prototypes
 ////////////////////////////////////////////////////////////////////////////////
-//! @brief Determine if the reliable update feature is active.
-static bool is_reliable_update_active(uint32_t backupApplicationBase);
+
+static bool is_reliable_update_active(void);
 
 //! @brief Determine if the specified application is valid
-static bool is_specified_application_valid(uint32_t applicationBase);
-
-//! @brief Update the property of reliable update status
-static void update_reliable_update_status(uint32_t status);
+static bool is_specified_application_valid(uint32_t applicationBase, uint16_t *applicationVersion);
 
 //! @brief Get the start address of specified application
 static uint32_t get_application_base(specified_application_type_t applicationType);
 
-//! @brief Get the base address of Bootloader Config Area
-static uint32_t get_bootloader_config_area_base(uint32_t applicationBase);
-
-//! @brief Get the maxmimum backup application size.
-static uint32_t get_max_backup_app_size(uint32_t address);
-
-//! @brief Do software reliable application update if backup application is valid
-static status_t software_reliable_update(uint32_t backupApplicationBase);
+//! @brief Do software reliable application update if slot1 application is valid
+static status_t software_reliable_update(uint32_t slot1ApplicationBase);
 
 //! @brief Copy source appliction to destination application region and return result
 static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uint32_t len);
@@ -90,158 +81,107 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
 // See bl_reliable_update.h for documents on this function.
 void bootloader_reliable_update_as_requested(reliable_update_option_t option, uint32_t address)
 {
-    // For software implementation, the option doesn't take effect, It always be kReliableUpdateOption_Swap.
-    // For hardware implementation, the option works properly
-    uint32_t backupApplicationBase;
-    backupApplicationBase = (address == 0) ? get_application_base(kSpecifiedApplicationType_Backup) : address;
-
-    // Below implementaion is for both kReliableUpdateOption_Normal and kReliableUpdateOption_Swap
-    if (!is_reliable_update_active(backupApplicationBase))
+    if (is_reliable_update_active())
     {
-        update_reliable_update_status(kStatus_ReliableUpdateInacive);
-    }
-    else
-    {
-        if (is_specified_application_valid(backupApplicationBase))
-        {
-            status_t status = software_reliable_update(backupApplicationBase);
-            update_reliable_update_status(status);
-        }
-        else
-        {
-            update_reliable_update_status(kStatus_ReliableUpdateBackupApplicationInvalid);
-        }
+        software_reliable_update(get_application_base(kSpecifiedApplicationType_Slot1));
     }
 }
 
-//! @brief Get the maxmimum backup application size.
-static uint32_t get_max_backup_app_size(uint32_t address)
-{
-#if BL_TARGET_ROM
-    return (g_bootloaderContext.flashState.PFlashTotalSize >> 1);
-#elif BL_TARGET_FLASH
-    int32_t maxAppSize;
-    int32_t maxBackupAppSize;
-
-    maxAppSize = address - get_application_base(kSpecifiedApplicationType_Main);
-    maxBackupAppSize =
-        g_bootloaderContext.flashState.PFlashBlockBase + g_bootloaderContext.flashState.PFlashTotalSize - address;
-
-    maxAppSize = ALIGN_DOWN(maxAppSize, g_bootloaderContext.flashState.PFlashSectorSize);
-    maxBackupAppSize = ALIGN_UP(maxBackupAppSize, g_bootloaderContext.flashState.PFlashSectorSize);
-
-    assert((maxAppSize > 0) && (maxBackupAppSize > 0));
-
-    return (uint32_t)MIN(maxAppSize, maxBackupAppSize);
-#else
-#error "This Bootloader type is NOT supported!"
-#endif
-}
+extern uint32_t flexspi_nor_get_amba_addr();
 
 //! @brief Get the start address of specified application
 static uint32_t get_application_base(specified_application_type_t applicationType)
 {
-    if (applicationType == kSpecifiedApplicationType_Main)
+    uint32_t appMapBase = 0;
+#if (defined(__ICCARM__))
+    uint32_t vectorStart = (uint32_t)__section_begin(".intvec");
+    tota_sbl_header_t *sblHeader = (tota_sbl_header_t *)vectorStart;
+    if (sblHeader->magic != SBL_MAGIC)
     {
-#if BL_TARGET_ROM
-        return g_bootloaderContext.flashState.PFlashBlockBase;
-#elif BL_TARGET_FLASH
-        return BL_APP_VECTOR_TABLE_ADDRESS;
-#else
-#error "This Bootloader type is NOT supported!"
-#endif
-    }
-    else if (applicationType == kSpecifiedApplicationType_Backup)
-    {
-#if BL_TARGET_ROM
-        return g_bootloaderContext.flashState.PFlashBlockBase + (g_bootloaderContext.flashState.PFlashTotalSize >> 1);
-#elif BL_TARGET_FLASH
-        return BL_BACKUP_APP_START;
-#else
-#error "This Bootloader type is NOT supported!"
-#endif
+        return 0;
     }
 
-    return 0;
-}
+    appMapBase = flexspi_nor_get_amba_addr();
+    uint32_t slotStartAddr;
+    if (applicationType == kSpecifiedApplicationType_Slot0)
+    {
+        slotStartAddr = sblHeader->slot0StartAddr;
+    }
+    else if (applicationType == kSpecifiedApplicationType_Slot1)
+    {
+        slotStartAddr = sblHeader->slot1StartAddr;
+    }
 
-//! @brief Get the base address of Bootloader Config Area
-static uint32_t get_bootloader_config_area_base(uint32_t applicationBase)
-{
-    return (applicationBase + 0x3c0);
+    if (slotStartAddr < appMapBase)
+    {
+        appMapBase += slotStartAddr;
+    }
+    else
+    {
+        appMapBase = slotStartAddr;
+    }
+#endif
+
+    return appMapBase;
 }
 
 // Determine if the reliable update feature is active
-// Note : the reliable update feature is active only when following conditions are met:
-//        1. the backup application is valid
-//        2. the BCA is enabled.
-static bool is_reliable_update_active(uint32_t backupApplicationBase)
+static bool is_reliable_update_active(void)
 {
-    // The reliable udpate feature is active only when  and the BCA is enabled.
-    uint32_t backupCrcChecksumBase = get_bootloader_config_area_base(backupApplicationBase);
-    crc_checksum_header_t *pchecksumHeader = (crc_checksum_header_t *)backupCrcChecksumBase;
-    appliation_header_t *pAppHeader = (appliation_header_t *)backupApplicationBase;
-
-    if (is_valid_application_location(pAppHeader->applicationPointer) && (kPropertyStoreTag == pchecksumHeader->tag))
+    uint32_t slot0ApplicationBase = get_application_base(kSpecifiedApplicationType_Slot0);
+    uint32_t slot1ApplicationBase = get_application_base(kSpecifiedApplicationType_Slot1);
+    uint16_t slot0Version = 0;
+    uint16_t slot1Version = 0;
+    bool slot0Valid = is_specified_application_valid(slot0ApplicationBase, &slot0Version);
+    bool slot1Valid = is_specified_application_valid(slot1ApplicationBase, &slot1Version);
+    if ((!slot0Valid) && slot1Valid)
     {
         return true;
     }
+    else if ((!slot1Valid) && slot0Valid)
+    {
+        return false;
+    }
+    else if (slot0Valid && slot1Valid)
+    {
+        return (slot1Version > slot0Valid);
+    }
     else
     {
         return false;
     }
-}
-
-// Update the status for reliable update
-static void update_reliable_update_status(uint32_t status)
-{
-    property_store_t *propertyStore = g_bootloaderContext.propertyInterface->store;
-    propertyStore->reliableUpdateStatus = status;
 }
 
 // Determine if the application is valid.
-// Note: the applicaiton is valid only if following conditions are met:
-//       1. (backup image only)crcByteCount <= backup app start - BL_APP_VECTOR_TABLE_ADDRESS -
-//       sizeof(header.expectedCrcValue).
-//       2. crcStartAddress = BL_APP_VECTOR_TABLE_ADDRESS
-//       3. The calculated crc checksum = expectedCrcValue
-static bool is_specified_application_valid(uint32_t applicationBase)
+static bool is_specified_application_valid(uint32_t applicationBase, uint16_t *applicationVersion)
 {
+    bool result = false;
     crc_checksum_header_t header;
-    uint32_t crcChecksumBase = get_bootloader_config_area_base(applicationBase);
-    uint32_t mainApplicationBase = get_application_base(kSpecifiedApplicationType_Main);
+    uint32_t crcChecksumBase;
 
-    memcpy(&header, (void *)crcChecksumBase, sizeof(header));
-
-    // The size of the backup image must be less than or equal to maximumn reserved backup application space
-    if (applicationBase != mainApplicationBase)
+    tota_app_header_t *appHeader = (tota_app_header_t *)applicationBase;
+    appliation_header_t *pAppHeader = (appliation_header_t *)applicationBase;
+    
+    if (APP_MAGIC == appHeader->magic)
     {
-        uint32_t maxBackupAppSize = get_max_backup_app_size(applicationBase);
-        int32_t backupAppSize = header.crcByteCount;
-        if (backupAppSize > maxBackupAppSize)
-        {
-            return false;
-        }
-    }
-    // crcStartAddress must be BL_BACKUP_APP_START, and calculated crc checksum must be expectedCrcValue
-    if (header.crcStartAddress != mainApplicationBase)
-    {
-        return false;
-    }
-    else
-    {
+        header.tag = kPropertyStoreTag;
         header.crcStartAddress = applicationBase;
-
+        header.crcByteCount = appHeader->length;
+        header.crcExpectedValue = appHeader->checksum;
+        
+        crcChecksumBase = applicationBase + (uint32_t)(&appHeader->checksum) - (uint32_t)(&appHeader->reserved0[0]);
         uint32_t calculatedCrc = calculate_application_crc32(&header, crcChecksumBase);
-        if (calculatedCrc != header.crcExpectedValue)
+        if (calculatedCrc == header.crcExpectedValue)
         {
-            return false;
-        }
-        else
-        {
-            return true;
+            if (is_valid_application_location(pAppHeader->applicationPointer))
+            {
+                result =  true;
+                *applicationVersion = appHeader->version;
+            }
         }
     }
+    
+    return result;
 }
 
 //! @brief Copy source appliction to destination application region and return result
@@ -249,9 +189,18 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
 {
     bool updateResult = true;
     status_t status;
+    
+    serial_nor_config_option_t option;
+    option.option0.U = 0xc0000005;
+    option.option1.U = 0x0;
+    status = mem_config(kMemoryFlexSpiNor, (void *)(&option));
+    if (kStatus_Success != status)
+    {
+        return false;
+    }
 
     // Erase the destination application region
-    status = mem_erase(dst, len);
+    status = mem_erase(dst, len, kMemoryFlexSpiNor);
     if (kStatus_Success != status)
     {
         updateResult = false;
@@ -273,7 +222,7 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
                 writeSize = len;
             }
             memcpy(copyBuffer, (uint8_t *)src, writeSize);
-            status = mem_write(dst, writeSize, (uint8_t *)&copyBuffer[0]);
+            status = mem_write(dst, writeSize, (uint8_t *)&copyBuffer[0], kMemoryFlexSpiNor);
             if (kStatus_Success != status)
             {
                 updateResult = false;
@@ -296,44 +245,29 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
 //      2. Copy the back applcation to the applicaion region
 //      3. Do integrity check for the copied application
 //      4. Erase the backup application
-status_t software_reliable_update(uint32_t backupApplicationBase)
+status_t software_reliable_update(uint32_t applicationBase)
 {
     bool updateResult = true;
     uint32_t applicationSizeInByte;
+    uint16_t dummy;
 
-    uint32_t backupCrcChecksumBase = get_bootloader_config_area_base(backupApplicationBase);
-    uint32_t mainApplicationBase = get_application_base(kSpecifiedApplicationType_Main);
+    tota_app_header_t *appHeader = (tota_app_header_t *)applicationBase;
+    uint32_t slot0ApplicationBase = get_application_base(kSpecifiedApplicationType_Slot0);
 
     // Get actual length to be erased.
-    crc_checksum_header_t header;
-    memcpy(&header, (uint8_t *)backupCrcChecksumBase, sizeof(header));
-    header.crcStartAddress = backupApplicationBase;
-
-    applicationSizeInByte = header.crcByteCount;
-    applicationSizeInByte = ALIGN_UP(applicationSizeInByte, g_bootloaderContext.flashState.PFlashSectorSize);
+    applicationSizeInByte = appHeader->length;
 
     // Copy the Backup Application to Main Appliction region
     updateResult =
-        get_result_after_copying_application(backupApplicationBase, mainApplicationBase, applicationSizeInByte);
+        get_result_after_copying_application(applicationBase, slot0ApplicationBase, applicationSizeInByte);
 
     // Erase the Backup Application region
     if (updateResult)
     {
-        // Reload the user configuration data so that we can validate if the updated application is valid
-        g_bootloaderContext.propertyInterface->load_user_config();
-
-        if (!is_application_crc_check_pass())
+        if (!is_specified_application_valid(slot0ApplicationBase, &dummy))
         {
             updateResult = false;
         }
-        else
-        {
-            status_t status = mem_erase(backupApplicationBase, applicationSizeInByte);
-            if (kStatus_Success != status)
-            {
-                updateResult = false;
-            }
-        } // if (!is_application_crc_check_pass())
     }     // if (updateResult)
 
     return (updateResult) ? kStatus_ReliableUpdateSuccess : kStatus_ReliableUpdateFail;
