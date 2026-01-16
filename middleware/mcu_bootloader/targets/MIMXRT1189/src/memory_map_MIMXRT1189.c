@@ -78,7 +78,7 @@ memory_map_entry_t g_memoryMap[] = {
     { .startAddress = FLEXSPI1_START_ADDRESS,
       /* Flexible size which will be filled after FlexSPI1 initialization. */
       .endAddress = FLEXSPI1_END_ADDRESS,
-      .memoryProperty = kMemoryNotExecutable,
+      .memoryProperty = kMemoryIsExecutable,
       .memoryId = kMemoryFlexSpiNor,
       .memoryInterface = &g_flexspiMemoryInterface },
 
@@ -86,7 +86,7 @@ memory_map_entry_t g_memoryMap[] = {
     { .startAddress = FLEXSPI1_NS_START_ADDRESS,
       /* Flexible size which will be filled after FlexSPI1 initialization. */
       .endAddress = FLEXSPI1_NS_END_ADDRESS,
-      .memoryProperty = kMemoryNotExecutable,
+      .memoryProperty = kMemoryIsExecutable,
       .memoryId = kMemoryFlexSpiNor,
       .memoryInterface = &g_flexspiMemoryInterface },
 
@@ -94,7 +94,7 @@ memory_map_entry_t g_memoryMap[] = {
     { .startAddress = FLEXSPI1_ALIAS_START_ADDRESS,
       /* Flexible size which will be filled after FlexSPI1 initialization. */
       .endAddress = FLEXSPI1_ALIAS_END_ADDRESS,
-      .memoryProperty = kMemoryNotExecutable,
+      .memoryProperty = kMemoryIsExecutable,
       .memoryId = kMemoryFlexSpiNor,
       .memoryInterface = &g_flexspiAliasAreaInterface },
 
@@ -102,7 +102,7 @@ memory_map_entry_t g_memoryMap[] = {
     { .startAddress = FLEXSPI1_NS_ALIAS_START_ADDRESS,
       /* Flexible size which will be filled after FlexSPI1 initialization. */
       .endAddress = FLEXSPI1_NS_ALIAS_END_ADDRESS,
-      .memoryProperty = kMemoryNotExecutable,
+      .memoryProperty = kMemoryIsExecutable,
       .memoryId = kMemoryFlexSpiNor,
       .memoryInterface = &g_flexspiAliasAreaInterface },
 

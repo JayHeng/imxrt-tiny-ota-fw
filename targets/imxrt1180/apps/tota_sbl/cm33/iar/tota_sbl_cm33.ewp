@@ -314,11 +314,11 @@
                 <option>
                     <name>CCAllowList</name>
                     <version>1</version>
-                    <state>11111110</state>
+                    <state>10010100</state>
                 </option>
                 <option>
                     <name>CCDebugInfo</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>IEndianMode</name>
@@ -436,7 +436,7 @@
                 </option>
                 <option>
                     <name>CCOptLevel</name>
-                    <state>3</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>CCOptStrategy</name>
@@ -445,7 +445,7 @@
                 </option>
                 <option>
                     <name>CCOptLevelSlave</name>
-                    <state>3</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>CCPosIndRopi</name>
@@ -1836,6 +1836,9 @@
                         <name>$PROJ_DIR$\..\..\..\..\..\..\middleware\mcu_bootloader\src\bootloader\src\bl_misc.c</name>
                     </file>
                     <file>
+                        <name>$PROJ_DIR$\..\..\..\..\..\..\middleware\mcu_bootloader\src\bootloader\src\bl_reliable_update.c</name>
+                    </file>
+                    <file>
                         <name>$PROJ_DIR$\..\..\..\..\..\..\middleware\mcu_bootloader\src\bootloader\src\bl_shutdown_cleanup.c</name>
                     </file>
                     <file>
@@ -1874,6 +1877,9 @@
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\..\..\..\..\..\middleware\mcu_bootloader\src\bootloader\bl_peripheral_interface.h</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\..\..\..\..\..\middleware\mcu_bootloader\src\bootloader\bl_reliable_update.h</name>
                 </file>
                 <file>
                     <name>$PROJ_DIR$\..\..\..\..\..\..\middleware\mcu_bootloader\src\bootloader\bl_shutdown_cleanup.h</name>
