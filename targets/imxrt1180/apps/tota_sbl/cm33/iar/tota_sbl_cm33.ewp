@@ -863,7 +863,7 @@
                 </option>
                 <option>
                     <name>IlinkConfigDefines</name>
-                    <state></state>
+                    <state>__ram_vector_table__=1</state>
                 </option>
                 <option>
                     <name>IlinkMapFile</name>
@@ -1128,7 +1128,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state>###Unitialized###</state>
+                    <state>tota_sbl_cm33_import_lib.o</state>
                 </option>
                 <option>
                     <name>OILinkExtraOption</name>
@@ -1240,6 +1240,15 @@
         </file>
         <file>
             <name>$PROJ_DIR$\..\clock_config.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\startup_MIMXRT1189_cm33.s</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\startup_MIMXRT1189_cm33_RAM.s</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\system_MIMXRT1189_cm33.c</name>
         </file>
     </group>
     <group>
@@ -1756,24 +1765,6 @@
         <name>mcu_bootloader</name>
         <group>
             <name>targets</name>
-            <group>
-                <name>MIMXRT1189</name>
-                <group>
-                    <name>src</name>
-                    <group>
-                        <name>startup</name>
-                        <group>
-                            <name>iar</name>
-                            <file>
-                                <name>$PROJ_DIR$\..\..\..\..\..\..\middleware\mcu_bootloader\targets\MIMXRT1189\src\startup\iar\startup_MIMXRT1189_cm33.s</name>
-                            </file>
-                        </group>
-                        <file>
-                            <name>$PROJ_DIR$\..\..\..\..\..\..\middleware\mcu_bootloader\targets\MIMXRT1189\src\startup\system_MIMXRT1189_cm33.c</name>
-                        </file>
-                    </group>
-                </group>
-            </group>
         </group>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\..\devices\RT\RT1180\MIMXRT1189\system_MIMXRT1189_cm33.h</name>
