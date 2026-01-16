@@ -96,7 +96,6 @@ do not initialize  { section .noinit };
 define block CodeRelocateRam { section .textrw };
 //define block ApplicationFlash { readonly, block CodeRelocate, readonly section .noinit };
 define block ApplicationRam { readwrite, block CodeRelocateRam, block CSTACK, block HEAP};
-place at address mem: m_interrupts_start    { readonly section .intvec };
 place in FCB_region                         { section .boot_hdr.conf };
 place in XMCD_region                        { section .boot_hdr.xmcd_data };
 place in CONTAINER_region                   { section .boot_hdr.container };

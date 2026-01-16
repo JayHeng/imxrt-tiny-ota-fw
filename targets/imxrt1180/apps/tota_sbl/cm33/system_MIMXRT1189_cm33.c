@@ -154,6 +154,11 @@ void SystemInit(void)
     __ISB();
 
     SystemInitHook();
+
+#if defined(__ICCARM__)
+  #pragma section = ".intvec_RAM"
+  SCB->VTOR = (uint32_t)__section_begin(".intvec_RAM");
+#endif
 }
 
 /* ----------------------------------------------------------------------------

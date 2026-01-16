@@ -789,11 +789,11 @@
                 </option>
                 <option>
                     <name>OCOutputOverride</name>
-                    <state>1</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>OOCOutputFile</name>
-                    <state>flashloader.bin</state>
+                    <state>tota_sbl_cm33.bin</state>
                 </option>
                 <option>
                     <name>OOCCommandLineProducer</name>
