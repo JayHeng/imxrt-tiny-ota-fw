@@ -17640,6 +17640,12 @@
         <file>
             <name>$PROJ_DIR$\..\tota_app.c</name>
         </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\..\..\..\tota\tota_func.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\..\..\..\tota\tota_func.h</name>
+        </file>
     </group>
     <group>
         <name>startup</name>

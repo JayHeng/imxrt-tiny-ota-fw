@@ -6,11 +6,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "fsl_device_registers.h"
-#include "fsl_debug_console.h"
-#include "board.h"
-#include "app.h"
 #include "tota_func.h"
+
+#if (defined(__ICCARM__))
+#pragma section = ".intvec"
+#endif
 
 /*******************************************************************************
  * Definitions
@@ -30,20 +30,22 @@
 /*!
  * @brief Main function
  */
-int main(void)
+void tota_app_ehco(void)
 {
-    char ch;
+    PRINTF("hello Tiny OTA app.\r\n");
 
-    /* Init board hardware. */
-    BOARD_InitHardware();
-
-    PRINTF("MCUX SDK version: %s\r\n", MCUXSDK_VERSION_FULL_STR);
-
-    tota_app_ehco();
-
-    while (1)
+#if (defined(__ICCARM__))
+    uint32_t vectorStart = (uint32_t)__section_begin(".intvec");
+    PRINTF("app vector addr = 0x%x.\r\n", vectorStart);
+    tota_app_header_t *appHeader = (tota_app_header_t *)vectorStart;
+    if (appHeader->magic == APP_MAGIC)
     {
-        ch = GETCHAR();
-        PUTCHAR(ch);
+        PRINTF("app version: V%d.%d \r\n", appHeader->version >>8, appHeader->version & 0xFF);
+        PRINTF("app length (bytes) = 0x%x.\r\n", appHeader->length);
     }
+    else
+    {
+        PRINTF("app doesn't contain magic.\r\n");
+    }
+#endif
 }
