@@ -19,6 +19,11 @@
 
 #define BL_FEATURE_RELIABLE_UPDATE (1)
 #define BL_FEATURE_CRC_CHECK       (1)
+#define BL_FEATURE_TIMEOUT         (0)
+// Bootloader peripheral detection default timeout in milliseconds
+// After coming out of reset the bootloader will spin in a peripheral detection
+// loop for this amount of time. A zero value means no time out.
+#define BL_DEFAULT_PERIPHERAL_DETECT_TIMEOUT 5000
 
 ////////////////////////////////////////////////////////////////////////////////
 // Bootloader Peripheral Configurations
@@ -55,15 +60,6 @@
 #endif
 
 #define BL_FEATURE_MIN_PROFILE (0)
-
-// Bootloader peripheral detection default timeout in milliseconds
-// After coming out of reset the bootloader will spin in a peripheral detection
-// loop for this amount of time. A zero value means no time out.
-#if DEBUG
-#define BL_DEFAULT_PERIPHERAL_DETECT_TIMEOUT 0
-#else
-#define BL_DEFAULT_PERIPHERAL_DETECT_TIMEOUT 5000
-#endif // DEBUG
 
 #define BL_FEATURE_LIFECYCLE_UPDATE (1)
 
