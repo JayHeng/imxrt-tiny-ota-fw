@@ -94,10 +94,6 @@ static void get_user_application_entry(uint32_t *appEntry, uint32_t *appStack)
     assert(appEntry);
     assert(appStack);
 
-#ifdef BL_TARGET_RAM
-    *appEntry = 0;
-    *appStack = 0;
-#else
 #if BL_FEATURE_RELIABLE_UPDATE
     if (g_bootloaderContext.imageStart != 0xffffffffu)
     {
@@ -114,7 +110,6 @@ static void get_user_application_entry(uint32_t *appEntry, uint32_t *appStack)
     *appEntry = APP_VECTOR_TABLE[kInitialPC];
     *appStack = APP_VECTOR_TABLE[kInitialSP];
 #endif // BL_FEATURE_RELIABLE_UPDATE
-#endif // BL_TARGET_RAM
 }
 #endif // BL_FEATURE_TIMEOUT
 

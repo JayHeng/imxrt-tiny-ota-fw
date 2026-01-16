@@ -52,8 +52,8 @@ memory_map_entry_t g_memoryMap[] = {
     // FlexSPI1 AMBA memory
     [kIndexFlexSpiNor] = {
       .startAddress = FLEXSPI1_AMBA_START_ADDRESS,
-      .endAddress = 0, /* Flexible size which will be filled after FlexSPI1 initialization. */
-      .memoryProperty = kMemoryNotExecutable | kMemoryType_FLASH,
+      .endAddress = FLEXSPI1_AMBA_END_ADDRESS,
+      .memoryProperty = kMemoryIsExecutable | kMemoryType_FLASH,
       .memoryId = kMemoryFlexSpiNor,
       .memoryInterface = &g_flexspiMemoryInterface
     },
@@ -62,8 +62,8 @@ memory_map_entry_t g_memoryMap[] = {
     [kIndexFlexSpiNorAlias] = {
       .startAddress = M4_FLEXSPI1_ALIAS_START_ADDRESS,
       .endAddress =
-          0, /* Flexible size which will be filled after FlexSPI1 initialization. Only filled when M4 booting. */
-      .memoryProperty = kMemoryNotExecutable | kMemoryType_FLASH,
+          FLEXSPI1_AMBA_END_ADDRESS, /* Flexible size which will be filled after FlexSPI1 initialization. Only filled when M4 booting. */
+      .memoryProperty = kMemoryIsExecutable | kMemoryType_FLASH,
       .memoryId = kMemoryFlexSpiNor,
       .memoryInterface = &g_flexspiAliasAreaInterface
     },
@@ -71,8 +71,8 @@ memory_map_entry_t g_memoryMap[] = {
     // FlexSPI2 AMBA memory
     [kIndexFlexSpiNor2] = {
       .startAddress = FLEXSPI2_AMBA_START_ADDRESS,
-      .endAddress = 0, /* Flexible size which will be filled after FlexSPI2 initialization. */
-      .memoryProperty = kMemoryNotExecutable | kMemoryType_FLASH,
+      .endAddress = FLEXSPI2_AMBA_END_ADDRESS,
+      .memoryProperty = kMemoryIsExecutable | kMemoryType_FLASH,
       .memoryId = kMemoryFlexSpiNor,
       .memoryInterface = &g_flexspiMemoryInterface
     },

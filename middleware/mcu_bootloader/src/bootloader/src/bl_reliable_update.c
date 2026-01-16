@@ -89,6 +89,10 @@ void bootloader_reliable_update_as_requested(reliable_update_option_t option, ui
     {
         status_t status = software_reliable_update(get_application_base(kSpecifiedApplicationType_Slot1));
         update_reliable_update_status(status);
+        if (status != kStatus_ReliableUpdateSuccess)
+        {
+            g_bootloaderContext.imageStart = 0xffffffffu;
+        }
     }
 }
 
@@ -146,6 +150,7 @@ static bool is_reliable_update_active(void)
     uint16_t slot1Version = 0;
     bool slot0Valid = is_specified_application_valid(slot0ApplicationBase, &slot0Version);
     bool slot1Valid = is_specified_application_valid(slot1ApplicationBase, &slot1Version);
+    g_bootloaderContext.imageStart = slot0ApplicationBase;
     if ((!slot0Valid) && slot1Valid)
     {
         return true;
@@ -156,11 +161,12 @@ static bool is_reliable_update_active(void)
     }
     else if (slot0Valid && slot1Valid)
     {
-        return (slot1Version > slot0Valid);
+        return (slot1Version > slot0Version);
     }
     else
     {
         update_reliable_update_status(kStatus_ReliableUpdateInacive);
+        g_bootloaderContext.imageStart = 0xffffffffu;
         return false;
     }
 }

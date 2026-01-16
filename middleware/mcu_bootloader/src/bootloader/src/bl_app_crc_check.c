@@ -78,7 +78,7 @@ uint32_t calculate_application_crc32(crc_checksum_header_t *header, uint32_t crc
     crc32_init(&crcInfo);
 
     // Run CRC, Considering skip crcExpectedValue address
-    uint32_t bypassStartAddress = crcHeaderStart + ((uint32_t)&header->crcExpectedValue - (uint32_t)&header->tag);
+    uint32_t bypassStartAddress = crcHeaderStart;// + ((uint32_t)&header->crcExpectedValue - (uint32_t)&header->tag);
     uint32_t bypassEndAddress = bypassStartAddress + sizeof(header->crcExpectedValue);
 
     if ((header->crcStartAddress >= bypassEndAddress) ||
