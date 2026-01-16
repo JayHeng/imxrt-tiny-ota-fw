@@ -86,6 +86,6 @@ keep{ section .boot_hdr.conf, section .boot_hdr.ivt, section .boot_hdr.boot_data
 
 //place in TEXT_region { block ApplicationFlash };
 place at address mem:m_interrupts_ram_start { section .intvec_RAM };
-place at address mem:m_text_start             { readonly section .intvec };
+place at address mem:m_interrupts_start     { readonly section .intvec };
 place in TEXT_region                          { readonly };
 place in DATA_region { block ApplicationRam };

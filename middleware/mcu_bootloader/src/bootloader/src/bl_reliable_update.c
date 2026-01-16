@@ -38,6 +38,7 @@
 #include "crc/crc32.h"
 #include "utilities/fsl_assert.h"
 #include "flexspi_nor_flash.h"
+#include "flexspi_nor_memory.h"
 
 #if BL_FEATURE_RELIABLE_UPDATE
 
@@ -203,6 +204,8 @@ static bool is_specified_application_valid(uint32_t applicationBase, uint16_t *a
     return result;
 }
 
+static uint8_t s_nor_page_buffer[256];
+
 //! @brief Copy source appliction to destination application region and return result
 static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uint32_t len)
 {
@@ -212,23 +215,22 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
     serial_nor_config_option_t option;
     option.option0.U = 0xc0000005;
     option.option1.U = 0x0;
-    status = mem_config(kMemoryFlexSpiNor, (void *)(&option));
+    status = flexspi_nor_mem_config((void *)(&option));
     if (kStatus_Success != status)
     {
         return false;
     }
 
     // Erase the destination application region
-    status = mem_erase(dst, len, kMemoryFlexSpiNor);
+    status = flexspi_nor_mem_erase(dst, len);
     if (kStatus_Success != status)
     {
         updateResult = false;
     }
     else
     {
-        uint32_t copyBuffer[8]; // Bufer used to hold the data to be written.
         uint32_t writeSize;
-        uint32_t bufferSize = sizeof(copyBuffer);
+        uint32_t bufferSize = sizeof(s_nor_page_buffer);
         // Copy the source application to destination application region.
         while (len)
         {
@@ -240,8 +242,8 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
             {
                 writeSize = len;
             }
-            memcpy(copyBuffer, (uint8_t *)src, writeSize);
-            status = mem_write(dst, writeSize, (uint8_t *)&copyBuffer[0], kMemoryFlexSpiNor);
+            memcpy(s_nor_page_buffer, (uint8_t *)src, writeSize);
+            status = flexspi_nor_mem_write(dst, writeSize, (uint8_t *)&s_nor_page_buffer[0]);
             if (kStatus_Success != status)
             {
                 updateResult = false;
@@ -254,6 +256,14 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
                 len -= writeSize;
             }
         } // while(len)
+        if (kStatus_Success == status)
+        {
+            status = flexspi_nor_mem_flush();
+            if (kStatus_Success != status)
+            {
+                updateResult = false;
+            }
+        }
     }
     return updateResult;
 }

@@ -56,12 +56,12 @@ __vector_table
         DCD     Empty_Handler                            ;Usage Fault Handler
 __vector_table_0x1c
         DCD     0                                             ;Reserved
-        DCD     0                                             ;Reserved
-        DCD     0                                             ;Reserved
+        DCD     0x00080000                                  ;Reserved
+        DCD     0x00100000                                  ;Reserved
         DCD     0                                             ;Reserved
         DCD     Empty_Handler                                   ;SVCall Handler
         DCD     Empty_Handler                              ;Debug Monitor Handler
-        DCD     0                                             ;Reserved
+        DCD     0x4C425354                                 ;Reserved
         DCD     Empty_Handler                                ;PendSV Handler
         DCD     Empty_Handler                               ;SysTick Handler
 
