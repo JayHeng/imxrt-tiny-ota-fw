@@ -63,7 +63,7 @@ define symbol m_container_size         = 0x2000;
 define symbol m_container_start        = m_flash_start + m_container_offset;
 define symbol m_container_end          = m_container_start + m_container_size - 1;
 
-define symbol app_image_offset         = 0x0000B000;
+define symbol app_image_offset         = 0x00080000;
 define symbol vector_table_size        = 0x00000400;
 if (isdefinedsymbol(__stack_size__)) {
   define symbol __size_cstack__        = __stack_size__;
