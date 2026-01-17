@@ -81,6 +81,7 @@ define exported symbol __CONTAINER_IMG_ENTRY_ADDR = start(TEXT_region);
 
 define block CSTACK    with alignment = 8, size = __size_cstack__   { };
 define block HEAP      with alignment = 8, size = __size_heap__     { };
+define block RO  { readonly };
 
 initialize by copy { readwrite };
 initialize by copy { section .data};
@@ -104,5 +105,5 @@ keep{ section .boot_hdr.conf, section .boot_hdr.xmcd_data, section .boot_hdr.con
 //place in TEXT_region { block ApplicationFlash };
 place at address mem:m_interrupts_ram_start   { section .intvec_RAM };
 place at address mem:m_interrupts_start       { readonly section .intvec };
-place in TEXT_region                          { readonly };
+place in TEXT_region                          { first block RO };
 place in DATA_region { block ApplicationRam };
