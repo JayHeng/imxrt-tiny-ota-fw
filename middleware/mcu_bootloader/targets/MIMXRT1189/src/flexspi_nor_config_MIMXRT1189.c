@@ -61,8 +61,8 @@ status_t flexspi_nor_update_map(void)
     g_memoryMap[kIndexFLEXSPI].endAddress = g_memoryMap[kIndexFLEXSPI].startAddress + totalFlashSize - 1;
 
     g_memoryMap[kIndexFLEXSPI_NS].memoryProperty = (kMemoryIsExecutable | kMemoryType_FLASH);
-    g_memoryMap[kIndexFLEXSPI_NS].startAddress = address_to_nonsecure_address(g_memoryMap[kIndexFLEXSPI].startAddress);
-    g_memoryMap[kIndexFLEXSPI_NS].endAddress = address_to_nonsecure_address(g_memoryMap[kIndexFLEXSPI].endAddress);
+    //g_memoryMap[kIndexFLEXSPI_NS].startAddress = address_to_nonsecure_address(g_memoryMap[kIndexFLEXSPI].startAddress);
+    g_memoryMap[kIndexFLEXSPI_NS].endAddress = g_memoryMap[kIndexFLEXSPI_NS].startAddress + totalFlashSize - 1;
 
 #if BL_FEATURE_FLEXSPI_ALIAS_AREA
     g_memoryMap[kIndexFLEXSPI_Alias].memoryProperty = kMemoryIsExecutable | kMemoryType_FLASH;

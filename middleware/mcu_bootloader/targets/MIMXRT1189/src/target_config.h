@@ -101,6 +101,12 @@ enum
 
 enum
 {
+    kIndexFlexSpiNor = 8,
+    kIndexFlexSpiNorAlias = 10,
+};
+
+enum
+{
     kIndexITCM = kIndexM33CodeTCM,
     kIndexDTCM = kIndexM33SysTCM,
 };
