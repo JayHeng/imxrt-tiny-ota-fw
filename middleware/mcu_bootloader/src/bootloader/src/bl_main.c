@@ -18,6 +18,7 @@
 #include "property.h"
 #include "vector_table_info.h"
 #include "memory.h"
+#include "tota_func.h"
 
 #if BL_FEATURE_RELIABLE_UPDATE
 #include "bl_reliable_update.h"
@@ -120,7 +121,7 @@ static void jump_to_application(uint32_t applicationAddress, uint32_t stackPoint
 #if defined(DEBUG) || defined(_DEBUG)
     debug_printf("Starting to jump application (PC=%x, SP=%x).\r\n", applicationAddress, stackPointer);
     debug_printf("application start = %x.\r\n", g_bootloaderContext.imageStart);
-    
+    tota_sbl_farewell();
 #endif
     shutdown_cleanup(kShutdownType_Shutdown);
 

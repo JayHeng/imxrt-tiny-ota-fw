@@ -58,7 +58,8 @@ void tota_app_ehco(void)
 
 void tota_sbl_ehco(void)
 {
-    PRINTF("hello Tiny OTA sbl.\r\n");
+    debug_printf("-----------------\r\n");
+    debug_printf("hello Tiny OTA sbl.\r\n");
 
 #if (defined(__ICCARM__))
     uint32_t vectorStart = (uint32_t)__section_begin(".intvec");
@@ -74,6 +75,11 @@ void tota_sbl_ehco(void)
         debug_printf("sbl doesn't contain magic.\r\n");
     }
 #endif
+}
+
+void tota_sbl_farewell(void)
+{
+    debug_printf("-----------------\r\n\r\n");
 }
 
 //! @brief Get the start address of specified application

@@ -59,6 +59,8 @@ void tota_app_ehco(void);
 
 void tota_sbl_ehco(void);
 
+void tota_sbl_farewell(void);
+
 uint32_t tota_get_app_base(specified_application_type_t applicationType);
 
 #if defined(__cplusplus)
