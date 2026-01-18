@@ -30,7 +30,7 @@
 // Prototypes
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG) || BL_FEATURE_DEBUG_UART
 static const char *get_peripheral_name(uint32_t peripheralTypeMask);
 #endif
 
@@ -56,7 +56,7 @@ int main(void);
 // Code
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG) || BL_FEATURE_DEBUG_UART
 //! @brief Returns the name of a peripheral given its type mask.
 const char *get_peripheral_name(uint32_t peripheralTypeMask)
 {

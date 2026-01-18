@@ -93,7 +93,7 @@
 //! is treated as a 32-bit little endian value.
 #define FOUR_CHAR_CODE(a, b, c, d) (((d) << 24) | ((c) << 16) | ((b) << 8) | ((a)))
 
-#if (defined(DEBUG) || defined(_DEBUG))
+#if (defined(DEBUG) || defined(_DEBUG)) || BL_FEATURE_DEBUG_UART
 extern void debug_printf(const char *fmt, ...);
 #else
 #define debug_printf(...)

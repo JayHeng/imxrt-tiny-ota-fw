@@ -11,6 +11,7 @@
 #include "fusemap.h"
 #include "memory_config.h"
 #include "peripherals_pinmux.h"
+#include "fsl_lpuart.h"
 
 #if BL_FEATURE_EDGELOCK_MODULE
 #include "fsl_edgelock.h"
@@ -24,6 +25,8 @@
  * Prototypes
  ******************************************************************************/
 static void update_memory_map(void);
+
+void debug_init(void);
 
 /*******************************************************************************
  * Codes
@@ -226,6 +229,26 @@ uint32_t get_primary_boot_device(void)
     return flash_device;
 }
 
+extern void uart_pinmux_config(uint32_t instance, pinmux_type_t pinmux);
+
+void debug_init(void)
+{
+    lpuart_config_t userConfig;
+    uint32_t baseAddr = LPUART1_BASE;
+
+    LPUART_GetDefaultConfig(&userConfig);
+    userConfig.baudRate_Bps = 115200;
+
+    LPUART_Init((LPUART_Type *)baseAddr, &userConfig, get_uart_clock(1));
+    uart_pinmux_config(1, kPinmuxType_Peripheral);
+    LPUART_EnableTx((LPUART_Type *)baseAddr, true);
+}
+
+void debug_uart_print(const uint8_t *buffer, uint32_t lengthInBytes)
+{
+    LPUART_WriteBlocking(LPUART1, buffer, lengthInBytes);
+}
+
 #if __ICCARM__
 
 size_t __write(int handle, const unsigned char *buf, size_t size)
@@ -251,6 +274,12 @@ void init_hardware(void)
     EDGELOCK_Init(SxMU);
 
     CLOCK_EnableClock(kCLOCK_Usb);
+
+#if defined(BL_FEATURE_DEBUG_UART)
+    debug_init();
+    
+    debug_printf("hello Tiny OTA sbl.\r\n");
+#endif
 }
 
 void deinit_hardware(void)

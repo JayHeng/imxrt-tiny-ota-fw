@@ -16,14 +16,14 @@
                                      MACROs
 ==================================================================================================*/
 
-#if (defined(DEBUG) || defined(_DEBUG))
+#if (defined(DEBUG) || defined(_DEBUG)) || BL_FEATURE_DEBUG_UART
 /*==================================================================================================
                                      Prototypes
 ==================================================================================================*/
 static void convert_digit_to_string(uint32_t digit, char *str, uint32_t *length);
 static void convert_hexdigit_to_string(uint32_t digit, char *str, uint32_t *length);
 
-#ifdef DEBUG_UART
+#if BL_FEATURE_DEBUG_UART
 extern void debug_uart_print(const uint8_t *buffer, uint32_t lengthInBytes);
 #endif
 
@@ -152,7 +152,7 @@ void debug_printf(const char *format, ...)
     }
     *printStr = '\0';
 
-#ifdef DEBUG_UART
+#if BL_FEATURE_DEBUG_UART
     debug_uart_print((const uint8_t *)stringBuffer, printStr - stringBuffer);
 #elif defined(DEBUG_SEMIHOST)
     printf("%s", stringBuffer);
