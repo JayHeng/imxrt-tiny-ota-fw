@@ -240,7 +240,18 @@ void debug_init(void)
     userConfig.baudRate_Bps = 115200;
 
     LPUART_Init((LPUART_Type *)baseAddr, &userConfig, get_uart_clock(1));
-    uart_pinmux_config(1, kPinmuxType_Peripheral);
+
+    IOMUXC_SetPinMux(
+        IOMUXC_GPIO_AON_08_LPUART1_TX,          /* GPIO_AON_08 is configured as LPUART1_TX */
+        0U);                                    /* Software Input On Field: Input Path is determined by functionality */
+    IOMUXC_SetPinConfig(
+        IOMUXC_GPIO_AON_08_LPUART1_TX,          /* GPIO_AON_08 PAD functional properties : */
+        0x0CU);                                 /* Slew Rate Field: Fast Slew Rate
+                                                   Drive Strength Field: normal driver
+                                                   Pull / Keep Select Field: Pull Enable
+                                                   Pull Up / Down Config. Field: Weak pull up
+                                                   Open Drain Field: Disabled */
+
     LPUART_EnableTx((LPUART_Type *)baseAddr, true);
 }
 
