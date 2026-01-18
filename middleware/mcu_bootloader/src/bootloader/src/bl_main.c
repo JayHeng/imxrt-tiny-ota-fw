@@ -119,6 +119,8 @@ static void jump_to_application(uint32_t applicationAddress, uint32_t stackPoint
 {
 #if defined(DEBUG) || defined(_DEBUG)
     debug_printf("Starting to jump application (PC=%x, SP=%x).\r\n", applicationAddress, stackPointer);
+    debug_printf("application start = %x.\r\n", g_bootloaderContext.imageStart);
+    
 #endif
     shutdown_cleanup(kShutdownType_Shutdown);
 
@@ -131,7 +133,7 @@ static void jump_to_application(uint32_t applicationAddress, uint32_t stackPoint
     farewellBootloader = (void (*)(void))applicationAddress;
 
     // Set the VTOR to the application vector table address.
-    SCB->VTOR = (uint32_t)APP_VECTOR_TABLE;
+    SCB->VTOR = g_bootloaderContext.imageStart;
 
     // Set stack pointers to the application stack pointer.
     __set_MSP(s_stackPointer);
