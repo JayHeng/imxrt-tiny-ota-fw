@@ -13,6 +13,7 @@
 #include "spi_nor_eeprom_memory.h"
 #include "fsl_iomuxc.h"
 #include "fsl_lpuart.h"
+#include "tota_func.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*******************************************************************************
@@ -424,7 +425,7 @@ void init_hardware(void)
 #if defined(BL_FEATURE_DEBUG_UART)
     debug_init();
     
-    debug_printf("hello Tiny OTA sbl.\r\n");
+    tota_sbl_ehco();
 #endif
 }
 

@@ -56,29 +56,45 @@ void tota_app_ehco(void)
 #define debug_printf(...)
 #endif
 
+void tota_sbl_ehco(void)
+{
+    PRINTF("hello Tiny OTA sbl.\r\n");
+
+#if (defined(__ICCARM__))
+    uint32_t vectorStart = (uint32_t)__section_begin(".intvec");
+    debug_printf("sbl vector addr = %x.\r\n", vectorStart);
+    tota_sbl_header_t *sblHeader = (tota_sbl_header_t *)vectorStart;
+    if (sblHeader->magic == SBL_MAGIC)
+    {
+        debug_printf("slot 0 start: %x \r\n", sblHeader->slot0StartAddr);
+        debug_printf("slot 1 start: %x \r\n", sblHeader->slot1StartAddr);
+    }
+    else
+    {
+        debug_printf("sbl doesn't contain magic.\r\n");
+    }
+#endif
+}
+
 //! @brief Get the start address of specified application
 uint32_t tota_get_app_base(specified_application_type_t applicationType)
 {
     uint32_t slotStartAddr = 0;
 #if (defined(__ICCARM__))
     uint32_t vectorStart = (uint32_t)__section_begin(".intvec");
-    debug_printf("sbl vector addr = %x.\r\n", vectorStart);
     tota_sbl_header_t *sblHeader = (tota_sbl_header_t *)vectorStart;
     if (sblHeader->magic != SBL_MAGIC)
     {
-        debug_printf("sbl doesn't contain magic.\r\n");
         return 0;
     }
 
     if (applicationType == kSpecifiedApplicationType_Slot0)
     {
         slotStartAddr = sblHeader->slot0StartAddr;
-        debug_printf("slot 0 start: %x \r\n", slotStartAddr);
     }
     else if (applicationType == kSpecifiedApplicationType_Slot1)
     {
         slotStartAddr = sblHeader->slot1StartAddr;
-        debug_printf("slot 1 start: %x \r\n", slotStartAddr);
     }
 #endif
 

@@ -12,6 +12,7 @@
 #include "memory_config.h"
 #include "peripherals_pinmux.h"
 #include "fsl_lpuart.h"
+#include "tota_func.h"
 
 #if BL_FEATURE_EDGELOCK_MODULE
 #include "fsl_edgelock.h"
@@ -287,7 +288,7 @@ void init_hardware(void)
 #if defined(BL_FEATURE_DEBUG_UART)
     debug_init();
     
-    debug_printf("hello Tiny OTA sbl.\r\n");
+    tota_sbl_ehco();
 #endif
 }
 
