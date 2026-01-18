@@ -39,7 +39,7 @@ const container container_data =
     },
     {{
         IMAGE_OFFSET,
-        IMAGE_SIZE,
+        (0x80000-0xb000+0x80000),
         IMAGE_LOAD_ADDRESS,
         0x00000000,
         IMAGE_ENTRY_ADDRESS,
