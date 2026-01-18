@@ -92,6 +92,7 @@ void bootloader_reliable_update_as_requested(reliable_update_option_t option, ui
         update_reliable_update_status(status);
         if (status != kStatus_ReliableUpdateSuccess)
         {
+            debug_printf("Failed to copy slot 1 app to slot 0 address.\r\n");
             g_bootloaderContext.imageStart = 0xffffffffu;
         }
     }
@@ -147,6 +148,8 @@ static bool is_reliable_update_active(void)
 {
     uint32_t slot0ApplicationBase = get_application_base(kSpecifiedApplicationType_Slot0);
     uint32_t slot1ApplicationBase = get_application_base(kSpecifiedApplicationType_Slot1);
+    debug_printf("slot 0 app base: 0x%x\r\n", slot0ApplicationBase);
+    debug_printf("slot 1 app base: 0x%x\r\n", slot1ApplicationBase);
     uint16_t slot0Version = 0;
     uint16_t slot1Version = 0;
     bool slot0Valid = is_specified_application_valid(slot0ApplicationBase, &slot0Version);
@@ -154,18 +157,24 @@ static bool is_reliable_update_active(void)
     g_bootloaderContext.imageStart = slot0ApplicationBase;
     if ((!slot0Valid) && slot1Valid)
     {
+        debug_printf("slot 0 app is invalid and slot 1 app is valid.\r\n");
         return true;
     }
     else if ((!slot1Valid) && slot0Valid)
     {
+        debug_printf("slot 0 app is valid and slot 1 app is invalid.\r\n");
         return false;
     }
     else if (slot0Valid && slot1Valid)
     {
+        debug_printf("both slot 0 and slot 1 app are valid.\r\n");
+        debug_printf("slot 0 app version: V%d.%d \r\n", slot0Version >>8, slot0Version & 0xFF);
+        debug_printf("slot 1 app version: V%d.%d \r\n", slot1Version >>8, slot1Version & 0xFF);
         return (slot1Version > slot0Version);
     }
     else
     {
+        debug_printf("both slot 0 and slot 1 app are invalid.\r\n");
         update_reliable_update_status(kStatus_ReliableUpdateInacive);
         g_bootloaderContext.imageStart = 0xffffffffu;
         return false;

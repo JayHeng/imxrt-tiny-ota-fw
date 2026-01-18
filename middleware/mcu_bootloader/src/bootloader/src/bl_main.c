@@ -117,7 +117,9 @@ static void get_user_application_entry(uint32_t *appEntry, uint32_t *appStack)
 //! @brief Exits bootloader and jumps to the user application.
 static void jump_to_application(uint32_t applicationAddress, uint32_t stackPointer)
 {
-
+#if defined(DEBUG) || defined(_DEBUG)
+    debug_printf("Starting to jump application (PC=%x, SP=%x).\r\n", applicationAddress, stackPointer);
+#endif
     shutdown_cleanup(kShutdownType_Shutdown);
 
     // Create the function call to the user application.
@@ -268,6 +270,9 @@ static peripheral_descriptor_t const *get_active_peripheral(void)
             milliseconds = BL_DEFAULT_PERIPHERAL_DETECT_TIMEOUT;
         }
         timeoutTicks = milliseconds * ticksPerMillisecond;
+#if defined(DEBUG) || defined(_DEBUG)
+        debug_printf("ISP detection timeout is %dms (%dticks)\r\n", milliseconds, timeoutTicks);
+#endif
 
         // save how many ticks we're currently at before the detection loop starts
         lastTicks = microseconds_get_ticks();
@@ -289,6 +294,9 @@ static peripheral_descriptor_t const *get_active_peripheral(void)
             // Check if the elapsed time is longer than the timeout.
             if (elapsedTicks >= timeoutTicks)
             {
+#if defined(DEBUG) || defined(_DEBUG)
+                debug_printf("ISP detection time is out.\r\n");
+#endif
                 // In the case of the typical peripheral timeout, jump to the user application.
                 jump_to_application(applicationAddress, stackPointer);
 
