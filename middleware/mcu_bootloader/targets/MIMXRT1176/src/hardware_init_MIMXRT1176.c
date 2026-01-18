@@ -11,6 +11,8 @@
 #include "memory_config.h"
 #include "peripherals_pinmux.h"
 #include "spi_nor_eeprom_memory.h"
+#include "fsl_iomuxc.h"
+#include "fsl_lpuart.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /*******************************************************************************
@@ -370,6 +372,31 @@ uint32_t get_primary_boot_device(void)
     return flash_device;
 }
 
+void debug_init(void)
+{
+    lpuart_config_t userConfig;
+    uint32_t baseAddr = LPUART1_BASE;
+
+    LPUART_GetDefaultConfig(&userConfig);
+    userConfig.baudRate_Bps = 115200;
+
+    LPUART_Init((LPUART_Type *)baseAddr, &userConfig, get_uart_clock(1));
+
+    IOMUXC_SetPinMux(
+        IOMUXC_GPIO_AD_24_LPUART1_TXD,               /* GPIO_AD_24 is configured as LPUART1_TX */
+        0U);                                    /* Software Input On Field: Input Path is determined by functionality */
+    IOMUXC_SetPinConfig(
+        IOMUXC_GPIO_AD_24_LPUART1_TXD,
+        IOMUXC_SW_PAD_CTL_PAD_DSE(1) | IOMUXC_SW_PAD_CTL_PAD_PUE(1) | IOMUXC_SW_PAD_CTL_PAD_PUS(1));
+
+    LPUART_EnableTx((LPUART_Type *)baseAddr, true);
+}
+
+void debug_uart_print(const uint8_t *buffer, uint32_t lengthInBytes)
+{
+    LPUART_WriteBlocking(LPUART1, buffer, lengthInBytes);
+}
+
 #if __ICCARM__
 
 size_t __write(int handle, const unsigned char *buf, size_t size)
@@ -393,6 +420,12 @@ void init_hardware(void)
     update_memory_map();
 
     CLOCK_EnableClock(kCLOCK_Usb);
+
+#if defined(BL_FEATURE_DEBUG_UART)
+    debug_init();
+    
+    debug_printf("hello Tiny OTA sbl.\r\n");
+#endif
 }
 
 void deinit_hardware(void)
@@ -473,9 +506,6 @@ void update_memory_map(void)
         // Reset the device and try to reboot again in case this issue is caused by abnormals
         NVIC_SystemReset();
     }
-    debug_printf("FLEXRAM config, index = %x, dtcmSize = %x, itcmSize = %x, ocramSize = %x\n", flexramCfgIndex,
-                 k_flexramCfgList[flexramCfgIndex].dtcmSize, k_flexramCfgList[flexramCfgIndex].itcmSize,
-                 k_flexramCfgList[flexramCfgIndex].ocramSize);
 
     if (is_cm4_boot())
     {

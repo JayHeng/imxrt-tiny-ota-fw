@@ -332,10 +332,35 @@ uint32_t microseconds_get_clock(void)
 //! @brief Return uart clock frequency according to instance
 uint32_t get_uart_clock(uint32_t instance)
 {
-    // LPUART1 clock has been configured to 80MHz in clock_configure
-    uint32_t lpuart_clock = 0;
-    lpuart_clock = 80 * FREQ_1MHz; // 80MHz;
-    return lpuart_clock;
+    switch (instance)
+    {
+        case 1:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart1);
+        case 2:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart2);
+        case 3:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart3);
+        case 4:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart4);
+        case 5:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart5);
+        case 6:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart6);
+        case 7:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart7);
+        case 8:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart8);
+        case 9:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart9);
+        case 10:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart10);
+        case 11:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart11);
+        case 12:
+            return CLOCK_GetRootClockFreq(kCLOCK_Root_Lpuart12);
+        default:
+            return 0;
+    }
 }
 
 void spi_clock_gate_enable(uint32_t instance)

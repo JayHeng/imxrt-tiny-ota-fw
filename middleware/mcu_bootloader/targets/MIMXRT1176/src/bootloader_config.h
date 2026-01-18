@@ -18,6 +18,9 @@
 // Determines whether to support isp boot via peripherals.
 #define BL_FEATURE_ISP_BOOT (1)
 
+// Determines whether to support debug uart
+#define BL_FEATURE_DEBUG_UART (1)
+
 #define BL_FEATURE_RELIABLE_UPDATE (1)
 #define BL_FEATURE_CRC_CHECK       (1)
 #define BL_FEATURE_TIMEOUT         (0)

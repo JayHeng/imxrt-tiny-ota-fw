@@ -229,8 +229,6 @@ uint32_t get_primary_boot_device(void)
     return flash_device;
 }
 
-extern void uart_pinmux_config(uint32_t instance, pinmux_type_t pinmux);
-
 void debug_init(void)
 {
     lpuart_config_t userConfig;
