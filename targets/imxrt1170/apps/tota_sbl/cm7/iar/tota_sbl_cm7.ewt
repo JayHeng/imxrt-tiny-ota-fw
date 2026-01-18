@@ -2784,6 +2784,12 @@
         <file>
             <name>$PROJ_DIR$\..\pin_mux.h</name>
         </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\..\..\..\tota\tota_func.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\..\..\..\..\tota\tota_func.h</name>
+        </file>
     </group>
     <group>
         <name>usb</name>

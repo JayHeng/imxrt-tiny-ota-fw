@@ -39,12 +39,9 @@
 #include "utilities/fsl_assert.h"
 #include "flexspi_nor_flash.h"
 #include "flexspi_nor_memory.h"
+#include "tota_func.h"
 
 #if BL_FEATURE_RELIABLE_UPDATE
-
-#if (defined(__ICCARM__))
-#pragma section = ".intvec"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -104,25 +101,13 @@ extern uint32_t flexspi_nor_get_amba_addr();
 static uint32_t get_application_base(specified_application_type_t applicationType)
 {
     uint32_t appMapBase = 0;
-#if (defined(__ICCARM__))
-    uint32_t vectorStart = (uint32_t)__section_begin(".intvec");
-    tota_sbl_header_t *sblHeader = (tota_sbl_header_t *)vectorStart;
-    if (sblHeader->magic != SBL_MAGIC)
+    uint32_t slotStartAddr = tota_get_app_base(applicationType);
+    if (!slotStartAddr)
     {
         return 0;
     }
 
     appMapBase = flexspi_nor_get_amba_addr();
-    uint32_t slotStartAddr;
-    if (applicationType == kSpecifiedApplicationType_Slot0)
-    {
-        slotStartAddr = sblHeader->slot0StartAddr;
-    }
-    else if (applicationType == kSpecifiedApplicationType_Slot1)
-    {
-        slotStartAddr = sblHeader->slot1StartAddr;
-    }
-
     if (slotStartAddr < appMapBase)
     {
         appMapBase += slotStartAddr;
@@ -131,7 +116,6 @@ static uint32_t get_application_base(specified_application_type_t applicationTyp
     {
         appMapBase = slotStartAddr;
     }
-#endif
 
     return appMapBase;
 }
@@ -148,8 +132,8 @@ static bool is_reliable_update_active(void)
 {
     uint32_t slot0ApplicationBase = get_application_base(kSpecifiedApplicationType_Slot0);
     uint32_t slot1ApplicationBase = get_application_base(kSpecifiedApplicationType_Slot1);
-    debug_printf("slot 0 app base: 0x%x\r\n", slot0ApplicationBase);
-    debug_printf("slot 1 app base: 0x%x\r\n", slot1ApplicationBase);
+    debug_printf("slot 0 app base: %x\r\n", slot0ApplicationBase);
+    debug_printf("slot 1 app base: %x\r\n", slot1ApplicationBase);
     uint16_t slot0Version = 0;
     uint16_t slot1Version = 0;
     bool slot0Valid = is_specified_application_valid(slot0ApplicationBase, &slot0Version);

@@ -41,42 +41,11 @@
 // Declarations
 ////////////////////////////////////////////////////////////////////////////////
 
-#define SBL_MAGIC (0x4C425354) //'TSBL'
-
-typedef struct _tota_sbl_header
-{
-    uint32_t reserved0[8];
-    uint32_t slot0StartAddr;
-    uint32_t slot1StartAddr;
-    uint32_t appLoadAddr;
-    uint32_t reserved1[2];
-    uint32_t magic;
-} tota_sbl_header_t;
-
-#define APP_MAGIC (0x50504154) //'TAPP'
-
-typedef struct _tota_app_header
-{
-    uint32_t reserved0[8];
-    uint32_t length;
-    uint16_t version;
-    uint16_t authType;
-    uint32_t checksum;
-    uint32_t reserved1[2];
-    uint32_t magic;
-} tota_app_header_t;
-
 typedef enum _reliable_update_option
 {
     kReliableUpdateOption_Normal = 0x0U, //!< Normal option, Update main appliction only if it is invalid
     kReliableUpdateOption_Swap = 0x1U,   //!< Swap option, Always update main appliction
 } reliable_update_option_t;
-
-typedef enum _specified_application_type
-{
-    kSpecifiedApplicationType_Slot0 = 0x0U,
-    kSpecifiedApplicationType_Slot1 = 0x1U,
-} specified_application_type_t;
 
 //! @brief Application crc check status codes.
 enum _reliable_update_status
