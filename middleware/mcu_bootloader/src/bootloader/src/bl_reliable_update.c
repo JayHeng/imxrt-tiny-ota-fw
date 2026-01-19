@@ -92,6 +92,10 @@ void bootloader_reliable_update_as_requested(reliable_update_option_t option, ui
             debug_printf("Failed to copy slot 1 app to slot 0 address.\r\n");
             g_bootloaderContext.imageStart = 0xffffffffu;
         }
+        else
+        {
+            debug_printf("Passed app copying.\r\n");
+        }
     }
 }
 
@@ -205,9 +209,12 @@ static bool get_result_after_copying_application(uint32_t src, uint32_t dst, uin
     bool updateResult = true;
     status_t status;
     
+    debug_printf("Copying slot 1 app to slot 0 address.\r\n");
+    
     serial_nor_config_option_t option;
     option.option0.U = 0xc0000005;
     option.option1.U = 0x0;
+    debug_printf("Initing FlexSPI controller using %x.\r\n", option.option0.U);
     status = flexspi_nor_mem_config((void *)(&option));
     if (kStatus_Success != status)
     {

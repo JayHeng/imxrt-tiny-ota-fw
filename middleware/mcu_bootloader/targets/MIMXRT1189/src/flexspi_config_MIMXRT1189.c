@@ -1478,7 +1478,7 @@ void flexspi_clock_config(uint32_t instance, uint32_t freq, uint32_t sampleClkMo
         uint32_t serialRootClk = 0;
         flexspi_get_clock(instance, kFlexSpiClock_SerialRootClock, &serialRootClk);
 
-        debug_printf("%s: expected freq=%d, configured clk root=%d", __func__, freq, serialRootClk);
+        //debug_printf("%s: expected freq=%d, configured clk root=%d", __func__, freq, serialRootClk);
     } while (0);
 #endif
 }
