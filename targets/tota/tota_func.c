@@ -38,14 +38,15 @@ void tota_app_ehco(void)
     uint32_t vectorStart = (uint32_t)__section_begin(".intvec");
     PRINTF("app vector addr = 0x%x.\r\n", vectorStart);
     tota_app_header_t *appHeader = (tota_app_header_t *)vectorStart;
-    if (appHeader->magic == APP_MAGIC)
+    if (((appHeader->authType == kAppAuthType_Magic) && (appHeader->authResult == APP_MAGIC)) ||
+        ((appHeader->authType == kAppAuthType_NonxipCRC32) || (appHeader->authType == kAppAuthType_XipCRC32)))
     {
         PRINTF("app version: V%d.%d \r\n", appHeader->version >>8, appHeader->version & 0xFF);
         PRINTF("app length (bytes) = 0x%x.\r\n", appHeader->length);
     }
     else
     {
-        PRINTF("app doesn't contain magic.\r\n");
+        PRINTF("app doesn't contain valid auth.\r\n");
     }
 #endif
 }
