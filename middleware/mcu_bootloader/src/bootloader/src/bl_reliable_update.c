@@ -179,14 +179,19 @@ static bool is_specified_application_valid(uint32_t applicationBase, uint16_t *a
     tota_app_header_t *appHeader = (tota_app_header_t *)applicationBase;
     appliation_header_t *pAppHeader = (appliation_header_t *)applicationBase;
     
-    if (APP_MAGIC == appHeader->magic)
+    if (kAppAuthType_Magic == appHeader->authType)
+    {
+        result = (APP_MAGIC == appHeader->authResult);
+        *applicationVersion = appHeader->version;
+    }
+    else if ((kAppAuthType_NonxipCRC32 == appHeader->authType) || (kAppAuthType_XipCRC32 == appHeader->authType))
     {
         header.tag = kPropertyStoreTag;
         header.crcStartAddress = applicationBase;
         header.crcByteCount = appHeader->length;
-        header.crcExpectedValue = appHeader->checksum;
+        header.crcExpectedValue = appHeader->authResult;
         
-        crcChecksumBase = applicationBase + (uint32_t)(&appHeader->checksum) - (uint32_t)(&appHeader->reserved0[0]);
+        crcChecksumBase = applicationBase + (uint32_t)(&appHeader->authResult) - (uint32_t)(&appHeader->reserved0[0]);
         uint32_t calculatedCrc = calculate_application_crc32(&header, crcChecksumBase);
         if (calculatedCrc == header.crcExpectedValue)
         {
