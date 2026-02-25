@@ -32,7 +32,7 @@
  */
 void tota_app_ehco(void)
 {
-    PRINTF("hello Tiny OTA app.\r\n");
+    PRINTF("hello Tiny OTA app V%d.%d.\r\n", TOTA_VERSION_MAJOR, TOTA_VERSION_MINOR);
 
 #if (defined(__ICCARM__))
     uint32_t vectorStart = (uint32_t)__section_begin(".intvec");
@@ -66,7 +66,7 @@ void tota_app_ehco(void)
 void tota_sbl_ehco(void)
 {
     debug_printf("-----------------\r\n");
-    debug_printf("hello Tiny OTA sbl.\r\n");
+    debug_printf("hello Tiny OTA sbl V%d.%d.\r\n", TOTA_VERSION_MAJOR, TOTA_VERSION_MINOR);
 
 #if (defined(__ICCARM__))
     uint32_t vectorStart = (uint32_t)__section_begin(".intvec");
