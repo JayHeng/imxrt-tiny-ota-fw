@@ -16,6 +16,9 @@
  * Definitions
  ******************************************************************************/
 
+#define TOTA_VERSION_MAJOR (1)
+#define TOTA_VERSION_MINOR (1)
+
 #define SBL_MAGIC (0x4C425354) //'TSBL'
 
 typedef struct _tota_sbl_header
